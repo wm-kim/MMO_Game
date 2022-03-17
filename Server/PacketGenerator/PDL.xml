@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--Naming Convention 
+  C_ : Client에서 보내는 packet, S_ Server에서 보내는 패킷
+  Broadcast 용도로 사용할 packet 앞에 Broadcast를 붙인다.
+  vector3 타입을 정의해서 자동화 코드를 만들어도 된다.
+  S_PlayerList : 기존에 있었던 유저 목록
+  isSelf : 자신이 컨트롤하는지 구분, 경우에 따라서 boolean을 사용하지 않고 나의 정보를 보내는 별도의 패킷을 파는것도 좋다-->
+<PDL>
+  <packet name="S_BroadcastEnterGame">
+    <int name="playerId"/>
+    <float name="posX"/>
+    <float name="posY"/>
+    <float name="posZ"/>
+  </packet>
+  <packet name="C_LeaveGame">
+  </packet>
+  <packet name="S_BroadcastLeaveGame">
+    <int name="playerId"/>
+  </packet>
+  <packet name="S_PlayerList">
+    <list name="player">
+      <bool name="isSelf"/>
+      <int name="playerId"/>
+      <float name="posX"/>
+      <float name="posY"/>
+      <float name="posZ"/>
+    </list>
+  </packet>
+  <!--client에서 요청할때 playerId를 보내지 않는 이유는 packet이 들어올때 clientSession으로 어떤 session한테 왔는지 같이 포함이 될텐데
+  clientSession에 자신의 id를 저장하고 있으면 되겠다.-->
+  <packet name="C_Move">
+    <float name="posX"/>
+    <float name="posY"/>
+    <float name="posZ"/>
+  </packet>
+  <packet name="S_BroadcastMove">
+    <!--누가 이동하고자 하는지 구분할 수 있어야하므로 playerId필요, Session은 ServerSession이 들어옴-->
+    <int name="playerId"/>
+    <float name="posX"/>
+    <float name="posY"/>
+    <float name="posZ"/>
+  </packet>
+</PDL>
