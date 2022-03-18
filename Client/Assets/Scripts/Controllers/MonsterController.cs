@@ -14,6 +14,7 @@ public class MonsterController : CreatureController
         Dir = MoveDir.None;
     }
 
+    // CreatureController의 Update에서 호출됨
     protected override void UpdateController()
     {
         // GetDirInput();

@@ -14,6 +14,7 @@ public class MapManager
     public int MaxY { get; set; }
 
     bool[,] _collision;
+    // GameObject[,] _obj; // obj좌표가 변할 떄마다 실시간으로 갱신
 
     // destpos가 넘어옴
     public bool CanGo(Vector3Int cellPos)
