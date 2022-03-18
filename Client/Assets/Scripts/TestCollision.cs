@@ -8,13 +8,11 @@ public class TestCollision : MonoBehaviour
     public Tilemap _tilemap;
     public TileBase _tile;
 
-    // Start is called before the first frame update
     void Start()
     {
         _tilemap.SetTile(new Vector3Int(0, 0, 0), _tile);
     }
 
-    // Update is called once per frame
     void Update()
     {
         List<Vector3Int> blocked = new List<Vector3Int>();
@@ -25,6 +23,6 @@ public class TestCollision : MonoBehaviour
             TileBase tile = _tilemap.GetTile(pos);
             if (tile != null)
                 blocked.Add(pos);
-        }
+        } 
     }
 }
