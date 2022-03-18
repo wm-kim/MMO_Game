@@ -17,33 +17,17 @@ public class MonsterController : CreatureController
     // CreatureController의 Update에서 호출됨
     protected override void UpdateController()
     {
-        // GetDirInput();
         base.UpdateController();
     }
 
-    // 키보드 입력을 받아서 방향 설정
-    void GetDirInput()
+    public override void OnDamage()
     {
-        if (Input.GetKey(KeyCode.W))
-        {
-            Dir = MoveDir.Up;
+        GameObject effect = Managers.Resource.Instantiate("Effect/DieEffect");
+        effect.transform.position = transform.position;
+        effect.GetComponent<Animator>().Play("START");
+        GameObject.Destroy(effect, 0.5f);
 
-        }
-        else if (Input.GetKey(KeyCode.S))
-        {
-            Dir = MoveDir.Down;
-        }
-        else if (Input.GetKey(KeyCode.A))
-        {
-            Dir = MoveDir.Left;
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            Dir = MoveDir.Right;
-        }
-        else
-        {
-            Dir = MoveDir.None;
-        }
+        Managers.Object.Remove(gameObject);
+        Managers.Resource.Destroy(gameObject);
     }
 }

@@ -1,0 +1,80 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using static Define;
+
+public class ArrowController : CreatureController
+{
+    protected override void Init()
+    {
+        switch(_lastDir)
+        {
+            case MoveDir.Up:
+                transform.rotation = Quaternion.Euler(0, 0, 0);
+                break;
+            case MoveDir.Down:
+                transform.rotation = Quaternion.Euler(0, 0, -180);
+                break;
+            case MoveDir.Left:
+                transform.rotation = Quaternion.Euler(0, 0, 90);
+                break;
+            case MoveDir.Right:
+                transform.rotation = Quaternion.Euler(0, 0, -90);
+                break;
+
+        }
+
+        base.Init();
+    }
+
+    protected override void UpdateAnimation() { }
+
+    // state가 idle인 상태에서 UpdateController에서 호출 (update)
+    // PlayerController의 경우 input을 받지 않으면
+    // GetDirInput에서 dir이 자동으로 none이 되지만 여기서는 그렇지 않음
+    protected override void UpdateIdle()
+    {
+        if (_dir != MoveDir.None)
+        {
+            Vector3Int destPos = CellPos;
+            switch (_dir)
+            {
+                case MoveDir.Up:
+                    destPos += Vector3Int.up;
+                    break;
+                case MoveDir.Down:
+                    destPos += Vector3Int.down;
+                    break;
+                case MoveDir.Left:
+                    destPos += Vector3Int.left;
+                    break;
+                case MoveDir.Right:
+                    destPos += Vector3Int.right;
+                    break;
+            }
+
+            State = CreatureState.Moving; // 자동으로 UpdaetMoving() 호출
+
+            if (Managers.Map.CanGo(destPos))
+            {
+                GameObject go = Managers.Object.Find(destPos);
+                if (go == null)
+                {
+                    CellPos = destPos;
+                }
+                else
+                {
+                    // 화살의 피격 판정 object(monster)와 충돌
+                    CreatureController cc = go.GetComponent<CreatureController>();
+                    if (cc != null) cc.OnDamage();
+
+                    Managers.Resource.Destroy(gameObject);
+                }
+            }
+            else
+            {
+                Managers.Resource.Destroy(gameObject);
+            }
+        }
+    }
+}

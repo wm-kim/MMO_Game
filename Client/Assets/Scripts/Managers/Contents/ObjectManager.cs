@@ -8,6 +8,7 @@ public class ObjectManager
     // Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();  
     List<GameObject> _objects = new List<GameObject>();
 
+    // id를 주면 내부에서 만들어주는 factory pattern이 있으면 좋겠다.
     public void Add(GameObject go) { _objects.Add(go); }
     public void Remove(GameObject go) { _objects.Remove(go); }
 

@@ -16,7 +16,7 @@ public class CreatureController : MonoBehaviour
     // 움직이지 못할 때 스킬 시전 가능하게 할거임
     // boolean을 늘리지 않고 state로 관리
     // protected bool _isMoving = false;
-    CreatureState _state = CreatureState.Idle;
+    protected CreatureState _state = CreatureState.Idle;
     public CreatureState State
     {
         get { return _state; }
@@ -33,10 +33,10 @@ public class CreatureController : MonoBehaviour
     // 마지막으로 바라보고 있던 방향
     // 꼼수 none이면 다 건너띄어서 idle animation을 안틀어줌. 
     // _dir이 none이 아니라면 UpdateIsMoving에서 자동으로 Moving State로 만들어줌
-    MoveDir _lastDir = MoveDir.Down; 
+    protected MoveDir _lastDir = MoveDir.Down; 
     // 게임을 처음실행할 때 움직이는 것을 막기 위해 초기값을 아무거나 설정
     // UpdateAnimation이 호출이 안되고 초반 설정값인 오른쪽 달리기를 재생한다.
-    MoveDir _dir = MoveDir.Down;
+    protected MoveDir _dir = MoveDir.Down;
     public MoveDir Dir
     {
         get { return _dir; }
@@ -53,6 +53,29 @@ public class CreatureController : MonoBehaviour
 
             UpdateAnimation();
         }
+    }
+
+    // 바로 앞칸의 cell을 얻고 싶다.
+    public Vector3Int GetFrontCellPos()
+    {
+        Vector3Int cellPos = CellPos;
+        switch(_lastDir)
+        {
+            case MoveDir.Up:
+                cellPos += Vector3Int.up; // (0, 1, 0)
+                break;
+            case MoveDir.Down:
+                cellPos += Vector3Int.down;
+                break;
+            case MoveDir.Left:
+                cellPos += Vector3Int.left;
+                break;
+            case MoveDir.Right:
+                cellPos += Vector3Int.right;
+                break;
+        }
+
+        return cellPos;
     }
 
     protected virtual void UpdateAnimation()
@@ -162,20 +185,60 @@ public class CreatureController : MonoBehaviour
         switch(State)
         {
             case CreatureState.Idle:
+                UpdateIdle();
                 break;
             case CreatureState.Moving:
                 UpdateMoving();
                 break;
             case CreatureState.Skill:
+                UpdateSkill();
                 break;
             case CreatureState.Dead:
+                UpdateDead();
                 break;
         }
-        UpdateIsMoving();
+    }
+
+    // 이동 가능한 상태(Idle)일때 실제 좌표 이동 
+    protected virtual void UpdateIdle()
+    {
+        // 완전히 이동 animation이 끝나기 전까지는 이동할 수 없게 막음
+        // if (State == CreatureState.Idle && _dir != MoveDir.None)
+        if (_dir != MoveDir.None)
+        {
+            Vector3Int destPos = CellPos;
+            switch (_dir)
+            {
+                case MoveDir.Up:
+                    destPos += Vector3Int.up;
+                    break;
+                case MoveDir.Down:
+                    destPos += Vector3Int.down;
+                    break;
+                case MoveDir.Left:
+                    destPos += Vector3Int.left;
+                    break;
+                case MoveDir.Right:
+                    destPos += Vector3Int.right;
+                    break;
+            }
+
+            State = CreatureState.Moving;
+
+            if (Managers.Map.CanGo(destPos))
+            {
+                if (Managers.Object.Find(destPos) == null)
+                {
+                    CellPos = destPos;
+                    // 버그 수정
+                    // State = CreatureState.Moving;
+                }
+            }
+        }
     }
 
     // client상에서 부드럽게 이동하기 위한 용도
-    private void UpdateMoving()
+    protected virtual void UpdateMoving()
     {
         // 조건을 추가하는 것보다 Update문에서 State따라 분기를 두는게 코드 구성이 좋음
         // if (State != CreatureState.Moving) return;
@@ -204,40 +267,18 @@ public class CreatureController : MonoBehaviour
         }
     }
 
-    // 이동 가능한 상태일때 실제 좌표 이동 
-    void UpdateIsMoving()
+    protected virtual void UpdateSkill()
     {
-        // 완전히 이동 animation이 끝나기 전까지는 이동할 수 없게 막음
-        if (State == CreatureState.Idle && _dir != MoveDir.None)
-        {
-            Vector3Int destPos = CellPos;
-            switch (_dir)
-            {
-                case MoveDir.Up:
-                    destPos += Vector3Int.up;
-                    break;
-                case MoveDir.Down:
-                    destPos += Vector3Int.down;
-                    break;
-                case MoveDir.Left:
-                    destPos += Vector3Int.left;
-                    break;
-                case MoveDir.Right:
-                    destPos += Vector3Int.right;
-                    break;
-            }
 
-            State = CreatureState.Moving;
+    }
 
-            if (Managers.Map.CanGo(destPos))
-            {
-                if(Managers.Object.Find(destPos) == null)
-                {
-                    CellPos = destPos;
-                    // 버그 수정
-                    // State = CreatureState.Moving;
-                }
-            }
-        }
+    protected virtual void UpdateDead()
+    {
+
+    }
+
+    public virtual void OnDamage()
+    {
+
     }
 }
