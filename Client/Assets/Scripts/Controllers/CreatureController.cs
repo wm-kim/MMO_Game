@@ -5,6 +5,7 @@ using static Define;
 
 public class CreatureController : MonoBehaviour
 {
+    [SerializeField]
     public float _speed = 5.0f;
 
     // protected Vector3Int _cellPos = Vector3Int.zero;
@@ -16,8 +17,9 @@ public class CreatureController : MonoBehaviour
     // 움직이지 못할 때 스킬 시전 가능하게 할거임
     // boolean을 늘리지 않고 state로 관리
     // protected bool _isMoving = false;
+    [SerializeField]
     protected CreatureState _state = CreatureState.Idle;
-    public CreatureState State
+    public virtual CreatureState State
     {
         get { return _state; }
         set
@@ -31,11 +33,12 @@ public class CreatureController : MonoBehaviour
     }
 
     // 마지막으로 바라보고 있던 방향
-    // 꼼수 none이면 다 건너띄어서 idle animation을 안틀어줌. 
-    // _dir이 none이 아니라면 UpdateIsMoving에서 자동으로 Moving State로 만들어줌
-    protected MoveDir _lastDir = MoveDir.Down; 
+    // 꼼수 none이면 다 건너띄어서 idle animation을 안틀어줌.
+    // _dir이 none이 아니라면 UpdateIsMoving(UpdateIdle)에서 자동으로 Moving State로 만들어줌
+    protected MoveDir _lastDir = MoveDir.Down;
     // 게임을 처음실행할 때 움직이는 것을 막기 위해 초기값을 아무거나 설정
     // UpdateAnimation이 호출이 안되고 초반 설정값인 오른쪽 달리기를 재생한다.
+    [SerializeField]
     protected MoveDir _dir = MoveDir.Down;
     public MoveDir Dir
     {
@@ -53,6 +56,20 @@ public class CreatureController : MonoBehaviour
 
             UpdateAnimation();
         }
+    }
+
+    public MoveDir GetDirFromVec(Vector3Int dir)
+    {
+        if (dir.x > 0)
+            return MoveDir.Right;
+        else if (dir.x < 0)
+            return MoveDir.Left;
+        else if (dir.y > 0)
+            return MoveDir.Up;
+        else if (dir.y < 0)
+            return MoveDir.Down;
+        else
+            return MoveDir.None;
     }
 
     // 바로 앞칸의 cell을 얻고 싶다.
@@ -78,6 +95,7 @@ public class CreatureController : MonoBehaviour
         return cellPos;
     }
 
+    // state를 먼저 check
     protected virtual void UpdateAnimation()
     {
         // 이중 switch는 가독성이 떨어져서 if-else
@@ -199,42 +217,15 @@ public class CreatureController : MonoBehaviour
         }
     }
 
-    // 이동 가능한 상태(Idle)일때 실제 좌표 이동 
+    // 이동 가능한 상태(Idle)일때 실제 좌표 이동
+    // -> 다른 class에서 공동으로 사용하기 위해 수정
     protected virtual void UpdateIdle()
     {
         // 완전히 이동 animation이 끝나기 전까지는 이동할 수 없게 막음
         // if (State == CreatureState.Idle && _dir != MoveDir.None)
-        if (_dir != MoveDir.None)
-        {
-            Vector3Int destPos = CellPos;
-            switch (_dir)
-            {
-                case MoveDir.Up:
-                    destPos += Vector3Int.up;
-                    break;
-                case MoveDir.Down:
-                    destPos += Vector3Int.down;
-                    break;
-                case MoveDir.Left:
-                    destPos += Vector3Int.left;
-                    break;
-                case MoveDir.Right:
-                    destPos += Vector3Int.right;
-                    break;
-            }
-
-            State = CreatureState.Moving;
-
-            if (Managers.Map.CanGo(destPos))
-            {
-                if (Managers.Object.Find(destPos) == null)
-                {
-                    CellPos = destPos;
-                    // 버그 수정
-                    // State = CreatureState.Moving;
-                }
-            }
-        }
+        // 호출하는 쪽의 분기로 들어감 
+        // MoveToNextPos로 이동
+        // UpdateIdle에서 UpdateMoving으로 넘어가는 코드가 필요하게됨 
     }
 
     // client상에서 부드럽게 이동하기 위한 용도
@@ -252,18 +243,65 @@ public class CreatureController : MonoBehaviour
         if (dist < _speed * Time.deltaTime)
         {
             transform.position = destPos;
+            // 그 다음 움직임
+            MoveToNextPos();
 
             // 예외적으로 animation을 직접 control
-            _state = CreatureState.Idle;
+            // State에 직접 대입하면 animation update가 발생해서 가다가 멈추고 반복함.  
+            // _state = CreatureState.Idle;
             // 초반 상태를 잡아주기 위해서
-            if (_dir == MoveDir.None)
-                UpdateAnimation(); // Idle animation으로 바꿈
+            // if (_dir == MoveDir.None)
+               // UpdateAnimation(); // Idle animation으로 바꿈
         }
         else
         {
             // 너무 speed가 빠르면 문제가 될 수 있음
             transform.position += movDir.normalized * _speed * Time.deltaTime;
             State = CreatureState.Moving; // 생략해도 되긴함
+        }
+    }
+
+    // 다른 방식으로 진행 하고 싶으면 이것만 override 
+    protected virtual void MoveToNextPos()
+    {
+        // 버그 자연 치유, 계속 누르고 있으면 
+        // 중간에 idle animation이 나오지 않는다.
+        if(_dir == MoveDir.None)
+        {
+            // UpdateAnimation
+            State = CreatureState.Idle;
+            return;
+        }
+
+        Vector3Int destPos = CellPos;
+        switch (_dir)
+        {
+            case MoveDir.Up:
+                destPos += Vector3Int.up;
+                break;
+            case MoveDir.Down:
+                destPos += Vector3Int.down;
+                break;
+            case MoveDir.Left:
+                destPos += Vector3Int.left;
+                break;
+            case MoveDir.Right:
+                destPos += Vector3Int.right;
+                break;
+        }
+
+        // 굳이 필요 없음 dir이 Non이 아니면 계속 움직이고 싶은 상태
+        // State = CreatureState.Moving;
+
+        // 공용으로 사용하기 어려운게 화살인지 player인지에 때라 나뉘었음
+        if (Managers.Map.CanGo(destPos))
+        {
+            if (Managers.Object.Find(destPos) == null)
+            {
+                CellPos = destPos;
+                // 버그 수정, 이동할 수 없어도 계속 움직이는 animation을 틀어주도록
+                // State = CreatureState.Moving;
+            }
         }
     }
 
@@ -277,6 +315,7 @@ public class CreatureController : MonoBehaviour
 
     }
 
+    // 죽는 effect & 화살 피격 object 파괴 
     public virtual void OnDamage()
     {
 

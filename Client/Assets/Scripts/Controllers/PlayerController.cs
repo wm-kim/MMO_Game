@@ -108,7 +108,8 @@ public class PlayerController : CreatureController
             // idle일때 혹은 Moving일 때 key 입력을 받는다.
             case CreatureState.Idle:
                 GetDirInput();
-                GetIdleInput();
+                 // GetIdleInput(); 
+                 // idle일 때 처리는 base에서 처리
                 break;
             case CreatureState.Moving:
                 GetDirInput();
@@ -123,6 +124,24 @@ public class PlayerController : CreatureController
     {
         //2d z값은 기본적으로 0 0 -10, z값을 바꾸면 화면이 안보이는 문제가 생길 수 있다
         Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
+    }
+
+    protected override void UpdateIdle()
+    {
+        // 이동상태 확인 UpdateIdle에서 UpdateMoving으로 넘어가는 코드
+        if(Dir != MoveDir.None) 
+        {
+            State = CreatureState.Moving;
+            return;
+        }
+
+        // skill 상태로 갈지 확인
+        if (Input.GetKey(KeyCode.Space))
+        {
+            State = CreatureState.Skill;
+            // _coSkill = StartCoroutine("CoStartPunch");
+            _coSkill = StartCoroutine("CoStartShootArrow");
+        }
     }
 
     // 키보드 입력을 받아서 방향 설정
@@ -156,15 +175,15 @@ public class PlayerController : CreatureController
     // 지금은 playController에 기생하는 형태
 
     // anim 바꿔준다.
-    private void GetIdleInput()
-    {
-        if (Input.GetKey(KeyCode.Space))
-        {
-            State = CreatureState.Skill;
-            // _coSkill = StartCoroutine("CoStartPunch");
-            _coSkill = StartCoroutine("CoStartShootArrow");
-        }
-    }
+    //private void GetIdleInput()
+    //{
+    //    if (Input.GetKey(KeyCode.Space))
+    //    {
+    //        State = CreatureState.Skill;
+    //        // _coSkill = StartCoroutine("CoStartPunch");
+    //        _coSkill = StartCoroutine("CoStartShootArrow");
+    //    }
+    //}
 
     IEnumerator CoStartPunch()
     {
@@ -187,6 +206,7 @@ public class PlayerController : CreatureController
     IEnumerator CoStartShootArrow()
     {
         GameObject go = Managers.Resource.Instantiate("Creature/Arrow");
+        // ArrowController Init에서 moving state로 설정해줌
         ArrowController ac = go.GetComponent<ArrowController>();
         // 키보드를 안누른 상태라고 해도 이전의 마지막으로 바라보고 있던 상태로 진행
         ac.Dir = _lastDir;
@@ -197,5 +217,10 @@ public class PlayerController : CreatureController
         yield return new WaitForSeconds(0.3f);
         State = CreatureState.Idle;
         _coSkill = null;
+    }
+
+    public override void OnDamage()
+    {
+        Debug.Log("Player HIT!");
     }
 }

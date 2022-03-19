@@ -7,6 +7,7 @@ public class ArrowController : CreatureController
 {
     protected override void Init()
     {
+        // 화살 그림 방향 수정
         switch(_lastDir)
         {
             case MoveDir.Up:
@@ -24,6 +25,9 @@ public class ArrowController : CreatureController
 
         }
 
+        State = CreatureState.Moving;
+        _speed = 15.0f;
+
         base.Init();
     }
 
@@ -32,49 +36,51 @@ public class ArrowController : CreatureController
     // state가 idle인 상태에서 UpdateController에서 호출 (update)
     // PlayerController의 경우 input을 받지 않으면
     // GetDirInput에서 dir이 자동으로 none이 되지만 여기서는 그렇지 않음
-    protected override void UpdateIdle()
+    // UpdateIdle -> MoveToNextPos
+    protected override void MoveToNextPos()
     {
-        if (_dir != MoveDir.None)
+        // 여기서 _dir != MoveDir.None 확인해도 달라지는건 없음
+        
+        Vector3Int destPos = CellPos;
+        switch (_dir)
         {
-            Vector3Int destPos = CellPos;
-            switch (_dir)
+            case MoveDir.Up:
+                destPos += Vector3Int.up;
+                break;
+            case MoveDir.Down:
+                destPos += Vector3Int.down;
+                break;
+            case MoveDir.Left:
+                destPos += Vector3Int.left;
+                break;
+            case MoveDir.Right:
+                destPos += Vector3Int.right;
+                break;
+        }
+
+        State = CreatureState.Moving; // 자동으로 UpdaetMoving() 호출
+        // 이제 이부분도 굳이 안넣어줘도 됨
+        // UpdateController base에서 UpdateIdle호출해서 이동상태로 넘어갈 것
+
+        if (Managers.Map.CanGo(destPos))
+        {
+            GameObject go = Managers.Object.Find(destPos);
+            if (go == null)
             {
-                case MoveDir.Up:
-                    destPos += Vector3Int.up;
-                    break;
-                case MoveDir.Down:
-                    destPos += Vector3Int.down;
-                    break;
-                case MoveDir.Left:
-                    destPos += Vector3Int.left;
-                    break;
-                case MoveDir.Right:
-                    destPos += Vector3Int.right;
-                    break;
-            }
-
-            State = CreatureState.Moving; // 자동으로 UpdaetMoving() 호출
-
-            if (Managers.Map.CanGo(destPos))
-            {
-                GameObject go = Managers.Object.Find(destPos);
-                if (go == null)
-                {
-                    CellPos = destPos;
-                }
-                else
-                {
-                    // 화살의 피격 판정 object(monster)와 충돌
-                    CreatureController cc = go.GetComponent<CreatureController>();
-                    if (cc != null) cc.OnDamage();
-
-                    Managers.Resource.Destroy(gameObject);
-                }
+                CellPos = destPos;
             }
             else
             {
+                // 화살의 피격 판정 object(monster)와 충돌
+                CreatureController cc = go.GetComponent<CreatureController>();
+                if (cc != null) cc.OnDamage();
+
                 Managers.Resource.Destroy(gameObject);
             }
         }
-    }
+        else
+        {
+            Managers.Resource.Destroy(gameObject);
+        }
+    } 
 }

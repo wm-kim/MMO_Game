@@ -16,7 +16,7 @@ public class GameScene : BaseScene
         player.name = "Player";
         Managers.Object.Add(player);
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 10; i++)
         {
             GameObject monster = Managers.Resource.Instantiate("Creature/Monster");
             monster.name = $"Monster_{i + 1}";

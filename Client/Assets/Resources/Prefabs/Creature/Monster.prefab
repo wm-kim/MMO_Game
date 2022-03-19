@@ -116,3 +116,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 5
+  _state: 0
+  _dir: 2
+  _destCellPos: {x: 0, y: 0, z: 0}
+  _target: {fileID: 0}
+  _searchRange: 5
+  _skillRange: 1
