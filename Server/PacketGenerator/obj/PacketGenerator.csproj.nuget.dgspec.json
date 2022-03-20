@@ -47,6 +47,18 @@
             "Google.Protobuf": {
               "target": "Package",
               "version": "[3.19.4, )"
+            },
+            "System.Buffers": {
+              "target": "Package",
+              "version": "[4.5.1, )"
+            },
+            "System.Memory": {
+              "target": "Package",
+              "version": "[4.5.4, )"
+            },
+            "System.Runtime.CompilerServices.Unsafe": {
+              "target": "Package",
+              "version": "[6.0.0, )"
             }
           },
           "imports": [

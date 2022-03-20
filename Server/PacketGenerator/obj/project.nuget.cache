@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "I3rExd1nxKtW4+fTEQhezrT/QD5I8Sr0w5CtqEUaOnWnpWQPIM0hM2Lp4ywUHtDkwGcrvT2CpSUBKBcsenwVMA==",
+  "dgSpecHash": "vTVKjBU5gaXVF0Ugvj6aeH28td8N/K4TW99fdg52DtHn2Z0Rxci6cQXErEADhBQWvOJYo7Tz1pKKp22XrrPhbw==",
   "success": true,
   "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\PacketGenerator\\PacketGenerator.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.19.4\\google.protobuf.3.19.4.nupkg.sha512"
+    "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.19.4\\google.protobuf.3.19.4.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.buffers\\4.5.1\\system.buffers.4.5.1.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.memory\\4.5.4\\system.memory.4.5.4.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
   ],
   "logs": []
 }

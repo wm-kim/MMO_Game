@@ -8,7 +8,6 @@ namespace ServerCore
 {
     public class Listener
     {
-        
         Socket _listenSocket;
         Func<Session> _sessionFactory; // 어떤 Session을 만들어줄지 정의
 

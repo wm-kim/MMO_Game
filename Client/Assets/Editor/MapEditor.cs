@@ -12,7 +12,7 @@ using UnityEditor;
 public class MapEditor 
 {
 #if UNITY_EDITOR
-
+    
     // ¥‹√‡≈∞
     // % (Ctrl) # (Shift) & (Alt)
     [MenuItem("Tools/GenerateMap %g")]

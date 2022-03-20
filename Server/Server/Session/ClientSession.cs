@@ -20,34 +20,30 @@ namespace Server
        
         public int SessionId { get; set; } // Session을 구분하기 위한 id
 
-
-
         // 엔진과 컨텐츠 분리
         public override void OnConnected(EndPoint endPoint)
         {
             Console.WriteLine("OnConnected : {0}", endPoint);
             // client가 접속 했을 때 바로 입장시키지 않고 client쪽으로 승인을 보내고
             // client쪽에서 모든 resource를 load 했을 때 ok packet을 보내면 방에 입장
-            
-            Person person = new Person()
+
+            // protoTest
+            S_Chat chat = new S_Chat()
             {
-                Name = "thdakfwn",
-                Id = 123,
-                Email = "thdakfwn@gmail.com",
-                Phones = { new PhoneNumber { Number = "555-4321", Type = PhoneType.Home } }
+                Context = "안녕하세요"
             };
 
             // 안에 있는건 대문자로 하는 것이 convention이긴 한데 이름이 다음과 같이 변함
             // MsgId.SChat
 
             // 이렇게 만들어줘야지 Session에서 사용할 수 있다.
-            ushort size = (ushort)person.CalculateSize();
+            ushort size = (ushort)chat.CalculateSize();
             byte[] sendBuffer = new byte[size + 4];
             // 내부에서 byte배열을 한번 더 할당하지만 비트연산을 이용해서 직접넣는 방법이 있다.
             Array.Copy(BitConverter.GetBytes(size + 4), 0, sendBuffer, 0, sizeof(ushort));
-            ushort protocolId = 1;
+            ushort protocolId = (ushort)MsgId.SChat;
             Array.Copy(BitConverter.GetBytes(protocolId), 0, sendBuffer, 2, sizeof(ushort));
-            Array.Copy(person.ToByteArray(), 0, sendBuffer, 4, size);
+            Array.Copy(chat.ToByteArray(), 0, sendBuffer, 4, size);
 
             Send(new ArraySegment<byte>(sendBuffer));
         }
@@ -69,7 +65,7 @@ namespace Server
 
         public override void OnSend(int numofBytes)
         {
-            // Console.WriteLine($"Transferred bytes : {numofBytes}");
+            Console.WriteLine($"Transferred bytes : {numofBytes}");
         }
     }
 }
