@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "Pu9yovTxmfjZ3hxJEVrzXf1RNK4tk3dJZuPQamTiDNz6Q+H6fuXiNLRfMSV4b/Pv9gxyOj3pDG8AcKzVZTED6g==",
+  "dgSpecHash": "I3rExd1nxKtW4+fTEQhezrT/QD5I8Sr0w5CtqEUaOnWnpWQPIM0hM2Lp4ywUHtDkwGcrvT2CpSUBKBcsenwVMA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\PacketGenerator\\PacketGenerator.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\PacketGenerator\\PacketGenerator.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.19.4\\google.protobuf.3.19.4.nupkg.sha512"
+  ],
   "logs": []
 }

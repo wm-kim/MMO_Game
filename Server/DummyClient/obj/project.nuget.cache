@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "pQHHwUlhUU2lPpcDWBThGxN/INVyedKLowzSFXZqlpx8QY5nf+tudOSaV1eXid99/F8bTKZHG8vyBH2pUFr7hg==",
+  "dgSpecHash": "22zC5IbJCtAehdtSGFHFBWgnmYcNO++hYpvk3K6UhBPPhHaXBLD39BAaM/Zo42PN2g3hzYXiHAB5xyGn55eyGw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\DummyClient\\DummyClient.csproj",
+  "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\DummyClient\\DummyClient.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

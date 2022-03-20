@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "kWHjGWmIbRPhPAT+31Dl+vxHOC0tHOBA0SmeaFEG10vBDLgyekBFhSvnh0plTAoPFGYOETwMeNu7Jvnh4BPd0A==",
+  "dgSpecHash": "xQihVqMcch85n4Qjjauza/OF1b5fZq9BpsQ1et3SXiZ3yyRaP9dL1owhcVvMxSG0htwbc/JmGFx+T13i6/NcxQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\ServerCore\\ServerCore.csproj",
+  "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\ServerCore\\ServerCore.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

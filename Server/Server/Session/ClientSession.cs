@@ -6,6 +6,9 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using ServerCore;
+using Google.Protobuf.Protocol;
+using static Google.Protobuf.Protocol.Person.Types;
+using Google.Protobuf;
 
 namespace Server
 {
@@ -16,10 +19,7 @@ namespace Server
     {
        
         public int SessionId { get; set; } // Session을 구분하기 위한 id
-        public GameRoom Room { get; set; }  // client session에서 내가 어떤 방에 있는지 궁금할 수 있으니까
-        public float PosX { get; set; }
-        public float PosY { get; set; }
-        public float PosZ { get; set; }
+
 
 
         // 엔진과 컨텐츠 분리
@@ -28,28 +28,33 @@ namespace Server
             Console.WriteLine("OnConnected : {0}", endPoint);
             // client가 접속 했을 때 바로 입장시키지 않고 client쪽으로 승인을 보내고
             // client쪽에서 모든 resource를 load 했을 때 ok packet을 보내면 방에 입장
+            
+            Person person = new Person()
+            {
+                Name = "thdakfwn",
+                Id = 123,
+                Email = "thdakfwn@gmail.com",
+                Phones = { new PhoneNumber { Number = "555-4321", Type = PhoneType.Home } }
+            };
 
-            // Client Session의 Room이 아닌 Program 전역에 있는 Room을 이용하므로 여기서는 문제 없음
-            Program.Room.Push(() => Program.Room.Enter(this));
+            // 안에 있는건 대문자로 하는 것이 convention이긴 한데 이름이 다음과 같이 변함
+            // MsgId.SChat
+
+            // 이렇게 만들어줘야지 Session에서 사용할 수 있다.
+            ushort size = (ushort)person.CalculateSize();
+            byte[] sendBuffer = new byte[size + 4];
+            // 내부에서 byte배열을 한번 더 할당하지만 비트연산을 이용해서 직접넣는 방법이 있다.
+            Array.Copy(BitConverter.GetBytes(size + 4), 0, sendBuffer, 0, sizeof(ushort));
+            ushort protocolId = 1;
+            Array.Copy(BitConverter.GetBytes(protocolId), 0, sendBuffer, 2, sizeof(ushort));
+            Array.Copy(person.ToByteArray(), 0, sendBuffer, 4, size);
+
+            Send(new ArraySegment<byte>(sendBuffer));
         }
 
         public override void OnDisconnected(EndPoint endPoint)
         {
             SessionManager.Instance.Remove(this);
-            if(Room != null)
-            {
-                // 한번더 null check를 하던가 Room을 꺼내서 사용한다.
-                // Room은 null로 없어지더라도 실제 지역 객체 room은 계속 존재하고 있다.
-                GameRoom room = Room;
-                room.Push(() => room.Leave(this));
-
-                // 사실 문제 있는 코드. 일감이 뒤로 밀린 상태에서
-                // client가 접속을 끊으면 Room을 찾지 못한 상태에서 crash가 난다.
-
-                // Room.Push(() => Room.Leave(this));
-
-                Room = null; // 혹시라도 2번 호출할까봐 null로 밀어줌
-            }
 
             Console.WriteLine($"OnDisconnected : {endPoint}");
         }
@@ -59,7 +64,7 @@ namespace Server
             // singleton이 아니라 handler 방식으로 등록해서 호출하는 방식으로해도 상관없다.
             // PacketManager에서 packet을 deserialize하고 handler를 호출한다.
             // 인자로 handler callback함수를 받는다. 명시하지 않으면 처음 register한 것이 들어감
-            PacketManager.Instance.OnRecvPacket(this, buffer);
+            // PacketManager.Instance.OnRecvPacket(this, buffer);
         }
 
         public override void OnSend(int numofBytes)

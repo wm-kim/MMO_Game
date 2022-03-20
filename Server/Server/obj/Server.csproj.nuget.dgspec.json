@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\Server\\Server.csproj": {}
+    "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\Server\\Server.csproj": {}
   },
   "projects": {
-    "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\ServerCore\\ServerCore.csproj": {
+    "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\ServerCore\\ServerCore.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\ServerCore\\ServerCore.csproj",
+        "projectUniqueName": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\ServerCore\\ServerCore.csproj",
         "projectName": "ServerCore",
-        "projectPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\ServerCore\\ServerCore.csproj",
+        "projectPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\ServerCore\\ServerCore.csproj",
         "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\ServerCore\\obj\\",
+        "outputPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\ServerCore\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -62,14 +62,14 @@
         }
       }
     },
-    "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\Server\\Server.csproj": {
+    "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\Server\\Server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\Server\\Server.csproj",
+        "projectUniqueName": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\Server\\Server.csproj",
         "projectName": "Server",
-        "projectPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\Server\\Server.csproj",
+        "projectPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\Server\\Server.csproj",
         "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\Server\\obj\\",
+        "outputPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\Server\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -90,8 +90,8 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\ServerCore\\ServerCore.csproj": {
-                "projectPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game 시작\\Server\\ServerCore\\ServerCore.csproj"
+              "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\ServerCore\\ServerCore.csproj": {
+                "projectPath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\ServerCore\\ServerCore.csproj"
               }
             }
           }
@@ -105,6 +105,12 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
+          "dependencies": {
+            "Google.Protobuf": {
+              "target": "Package",
+              "version": "[3.19.4, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

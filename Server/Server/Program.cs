@@ -6,7 +6,9 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using ServerCore;
-
+using Google.Protobuf;
+using Google.Protobuf.Protocol;
+using static Google.Protobuf.Protocol.Person.Types;
 
 namespace Server
 {
@@ -14,18 +16,16 @@ namespace Server
     {
         static Listener _listener = new Listener();
         // GameRoom도 나중에는 하나가 아니라 RoomManger가 있어야한다.
-        public static GameRoom Room = new GameRoom();
+        // public static GameRoom Room = new GameRoom();
 
         static void FlushRoom()
         {
-            Room.Push(() => Room.Flush());
             JobTimer.Instance.Push(FlushRoom, 250); //  다시 예약
         }
 
         static void Main(string[] args)
         {
-            // PacketManager.Instance.Register();
-
+           
             string host = Dns.GetHostName(); // local 컴퓨터의 host이름
             IPHostEntry ipHost = Dns.GetHostEntry(host); // 네트워크망 안에 있는 DNS 서버가 해줌
             // 배열로 되어있는 이유, 트래픽이 많을 경우 ip를 여러개 사용하여 부하 분산

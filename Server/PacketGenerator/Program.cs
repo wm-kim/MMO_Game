@@ -1,223 +1,77 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Xml;
 
-namespace  PacketGenerator
-{ 
-    // json, xml, 기타 자체 정의, xml이 json에 비해서 hierarchy가 편하게 보여서 패킷은 xml을 선호
-    class Program
-    {
-        static string? genPackets;
+namespace PacketGenerator
+{
+	class Program
+	{
+		static string? clientRegister;
+		static string? serverRegister;
 
-        static ushort packetId; // 0번 부터 시작해서 +1씩 늘려줄거임. 해킹 대비해서 shuffle 해도됨
-        static string? packetEnums;
+		static void Main(string[] args)
+		{
+			string file = "../../../../../Common/protoc-3.20.0-rc-2-win64/bin/Protocol.proto";
+			if (args.Length >= 1)
+				file = args[0];
 
-        static string? clientRegister;
-        static string? serverRegister;
+			bool startParsing = false;
+			foreach (string line in File.ReadAllLines(file))
+			{
+				if (!startParsing && line.Contains("enum MsgId"))
+				{
+					startParsing = true;
+					continue;
+				}
 
-        static void Main(string[] args)
-        {
-            string pdlPath = "../../../PDL.xml";
-                
-            XmlReaderSettings settings = new XmlReaderSettings()
-            {
-                IgnoreComments = true,
-                IgnoreWhitespace = true
-            };
+				if (!startParsing)
+					continue;
 
-            if(args.Length >= 1) pdlPath = args[0];
+				if (line.Contains("}"))
+					break;
 
-            using (XmlReader r = XmlReader.Create(pdlPath, settings))
-            {
-                r.MoveToContent();
+				string[] names = line.Trim().Split(" =");
+				if (names.Length == 0)
+					continue;
 
-                // stream 방식으로 한줄 한줄 읽음 r.Name r["name"]
-                while (r.Read()) 
-                {
-                    // Packet인지 아닌지 먼저 구분하고 시작, 마지막에 있는 Packet tag를 무시하기 위해서 
-                    // XmlNodeType.Element가 시작하는것이고, XmlNodeType.EndElement는 끝나는것
-                    if (r.Depth == 1 && r.NodeType == XmlNodeType.Element)
-                        ParsePacket(r);
+				string name = names[0];
+				if (name.StartsWith("S_"))
+				{
+					string[] words = name.Split("_");
 
-                    // Console.WriteLine(r.Name + " " + r["name"]);
-                }
+					string msgName = "";
+					foreach (string word in words)
+						msgName += FirstCharToUpper(word);
 
-                string FileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
-                File.WriteAllText("GenPackets.cs", FileText);
+					string packetName = $"S_{msgName.Substring(1)}";
+					// S_를 받아서 packet을 만들어주는건 client이므로 clientRegister
+					clientRegister += string.Format(PacketFormat.managerRegisterFormat, msgName, packetName);
+				}
+				else if (name.StartsWith("C_"))
+				{
+					string[] words = name.Split("_");
 
-                string clientManagerText = string.Format(PacketFormat.managerFormat, clientRegister);
-                File.WriteAllText("ClientPacketManager.cs", clientManagerText);
-                string serverManagerText = string.Format(PacketFormat.managerFormat, serverRegister);
-                File.WriteAllText("ServerPacketManager.cs", serverManagerText);
-            }
-        }
+					string msgName = "";
+					foreach (string word in words)
+						msgName += FirstCharToUpper(word);
 
-        public static void ParsePacket(XmlReader r)
-        {
-            if (r.NodeType == XmlNodeType.EndElement) return;
-            if (r.Name.ToLower() != "packet") // packet인지 재차 확인
-            {
-                Console.WriteLine("Invalid packet node");
-                return;
-            }
+					string packetName = $"C_{msgName.Substring(1)}";
+					serverRegister += string.Format(PacketFormat.managerRegisterFormat, msgName, packetName);
+				}
+			}
 
-            string? packetName = r["name"];
-            if (string.IsNullOrEmpty(packetName))
-            {
-                Console.WriteLine("Packet without name");
-                return;
-            }
+			string clientManagerText = string.Format(PacketFormat.managerFormat, clientRegister);
+			File.WriteAllText("ClientPacketManager.cs", clientManagerText);
+			string serverManagerText = string.Format(PacketFormat.managerFormat, serverRegister);
+			File.WriteAllText("ServerPacketManager.cs", serverManagerText);
+		}
 
-            Tuple<string, string, string>? t = ParseMembers(r);
-            if (t == null) return;
-
-            genPackets += string.Format(PacketFormat.packetFormat, packetName, t.Item1, t.Item2, t.Item3);
-            packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
-            
-            if(packetName.StartsWith("S_") || packetName.StartsWith("s_"))
-                clientRegister += string.Format(PacketFormat.managerRegisterFormat, packetName) + Environment.NewLine;
-            else
-                serverRegister += string.Format(PacketFormat.managerRegisterFormat, packetName) + Environment.NewLine;
-        }
-
-        public static Tuple<string, string, string>? ParseMembers(XmlReader r)
-        {
-            string? packetName = r["name"];
-
-            string? memberCode = "";
-            string? readCode = "";
-            string? writeCode = "";
-
-            int depth = r.Depth + 1;
-            while(r.Read())
-            {
-                // 바로 아래 단계가 아니면 스킵
-                if (r.Depth != depth) break;
-
-                string? memberName = r["name"];
-                if(string.IsNullOrEmpty(memberName))
-                {
-                    Console.WriteLine("Member without name");
-                    return null;
-                }
-
-                // formatting 개행 문자 삽입
-                if (string.IsNullOrEmpty(memberCode) == false) memberCode += Environment.NewLine;
-                if (string.IsNullOrEmpty(readCode) == false) readCode += Environment.NewLine;
-                if (string.IsNullOrEmpty(writeCode) == false) writeCode += Environment.NewLine;
-
-                string memberType = r.Name.ToLower();
-                switch(memberType)
-                {
-                    case "byte":
-                    case "sbyte":
-                        memberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
-                        readCode += string.Format(PacketFormat.readByteFormat, memberName, memberType);
-                        writeCode += string.Format(PacketFormat.writeByteFormat, memberName, memberType);
-                        break;
-
-                    case "bool":
-                    case "short":
-                    case "ushort":
-                    case "int":
-                    case "long":
-                    case "float":
-                    case "double":
-                        memberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
-                        readCode += string.Format(PacketFormat.readFormat, memberName, ToMemberType(memberType), memberType);
-                        writeCode += string.Format(PacketFormat.writeFormat, memberName, memberType);
-                        break;
-
-                    case "string":
-                        memberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
-                        readCode += string.Format(PacketFormat.readStringFormat, memberName);
-                        writeCode += string.Format(PacketFormat.writeStringFormat, memberName);
-                        break;
-                    case "list":
-                        Tuple<string, string, string>? t = ParseList(r);
-                        if (t != null)
-                        {
-                            memberCode += t.Item1;
-                            readCode += t.Item2;
-                            writeCode += t.Item3;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            // formatting
-            memberCode = memberCode.Replace("\n", "\n\t");
-            readCode = readCode.Replace("\n", "\n\t\t");
-            writeCode = writeCode.Replace("\n", "\n\t\t");
-            return new Tuple<string, string, string>(memberCode, readCode, writeCode);
-        }
-
-        public static Tuple<string, string, string>? ParseList(XmlReader r)
-        {
-            string? listName = r["name"];
-            if(string.IsNullOrEmpty(listName))
-            {
-                Console.WriteLine("List without name");
-                return null;
-            }
-
-            Tuple<string , string, string>? t = ParseMembers(r);
-            if (t == null) return null;
-
-            string memberCode = string.Format(PacketFormat.memberListFormat, 
-                FirstCharToUpper(listName),
-                FirstCharToLower(listName),
-                t.Item1,
-                t.Item2,
-                t.Item3);
-
-            string readCode = string.Format(PacketFormat.readListFormat,
-                FirstCharToUpper(listName),
-                FirstCharToLower(listName));
-
-            string writeCode = string.Format(PacketFormat.writeListFormat,
-                FirstCharToUpper(listName),
-                FirstCharToLower(listName));
-
-            return new Tuple<string, string, string>(memberCode, readCode, writeCode);
-        }
-
-        public static string ToMemberType(string memberType)
-        {
-            switch (memberType)
-            {
-                case "bool":
-                    return "ToBoolean";
-                // case "byte": byte배열에서 byte배열로 변환하는걸 따로 정의할 필요 없다. 
-                case "short":
-                    return "ToInt16";
-                case "ushort":
-                    return "ToUInt16";
-                case "int":
-                    return "ToInt32";
-                case "long":
-                    return "ToInt64";
-                case "float":
-                    return "ToSingle";
-                case "double":
-                    return "ToDouble";
-                default:
-                    return "";
-            }
-        }
-
-        public static string FirstCharToUpper(string? input)
-        {
-            if (string.IsNullOrEmpty(input)) return "";
-            return input[0].ToString().ToUpper() + input.Substring(1);
-        }
-
-        public static string FirstCharToLower(string? input)
-        {
-            if (string.IsNullOrEmpty(input)) return "";
-            return input[0].ToString().ToLower() + input.Substring(1);
-        }
-    }
+		public static string FirstCharToUpper(string input)
+		{
+			if (string.IsNullOrEmpty(input))
+				return "";
+			return input[0].ToString().ToUpper() + input.Substring(1).ToLower();
+		}
+	}
 }
