@@ -1,3 +1,4 @@
+using Google.Protobuf.Protocol;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -5,18 +6,49 @@ using UnityEngine;
 
 public class ObjectManager 
 {
-    // Server
-    // Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();  
-    List<GameObject> _objects = new List<GameObject>();
+    public MyPlayerController MyPlayer { get; set; }
+    // Server List에서 Dictionary로 바꿈
+    Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();  
 
-    // id를 주면 내부에서 만들어주는 factory pattern이 있으면 좋겠다.
-    public void Add(GameObject go) { _objects.Add(go); }
-    public void Remove(GameObject go) { _objects.Remove(go); }
+    // 내부에서 만들어주는 factory pattern
+    public void Add(PlayerInfo info, bool myPlayer = false)
+    {
+        if(myPlayer)
+        {
+            GameObject go = Managers.Resource.Instantiate("Creature/MyPlayer");
+            go.name = info.Name;
+            _objects.Add(info.PlayerId, go);
 
-    // 느린 방법, 주어진 좌표에 object가 있는지 확인, O(n) 객체가 적다면 괜찮음
+            MyPlayer = go.GetComponent<MyPlayerController>();
+            MyPlayer.Id = info.PlayerId;
+            MyPlayer.CellPos = new Vector3Int(info.PosX, info.PosY, 0);
+        }
+        else
+        {
+            GameObject go = Managers.Resource.Instantiate("Creature/Player");
+            go.name = info.Name;
+            _objects.Add(info.PlayerId, go);
+
+            PlayerController pc = go.GetComponent<PlayerController>();
+            pc.Id = info.PlayerId;
+            pc.CellPos = new Vector3Int(info.PosX, info.PosY, 0);
+        }
+    }
+
+    public void Add(int id, GameObject go) { _objects.Add(id, go); }
+    public void Remove(int id) { _objects.Remove(id); }
+
+    public void RemoveMyPlayer()
+    {
+        if (MyPlayer == null) return;
+        Remove(MyPlayer.Id);
+        MyPlayer = null;
+    }
+
+    // 주어진 좌표에 object가 있는지 확인
     public GameObject Find(Vector3Int cellPos)
     {
-        foreach(GameObject obj in _objects)
+        foreach(GameObject obj in _objects.Values)
         {
             CreatureController cc = obj.GetComponent<CreatureController>();
             if (cc == null) continue;
@@ -27,10 +59,9 @@ public class ObjectManager
         return null;
     }
 
-    // obj를 순회해서 
     public GameObject Find(Func<GameObject, bool> condition)
     {
-        foreach(GameObject obj in _objects)
+        foreach(GameObject obj in _objects.Values)
         {   
             if (condition.Invoke(obj))
                 return obj;

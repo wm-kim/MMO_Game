@@ -5,47 +5,53 @@ import "google/protobuf/timestamp.proto";
 option csharp_namespace = "Google.Protobuf.Protocol";
 
 enum MsgId {
-  PERSON = 0;
-  C_CHAT = 1;
-  S_CHAT = 2;
-  S_ENTER_GAME = 3;
-}
-
-message C_Chat {
-  string context = 1;
-}
-
-message S_Chat {
-  string context = 1;
+// 아래 packet을 naming convention에 따라 맞춰야함, parsing하기 위해서
+  S_ENTER_GAME = 0;
+  S_LEAVE_GAME = 1;
+  S_SPAWN = 2;
+  S_DESPAWN = 3;
+  C_MOVE = 4;
+  S_MOVE = 5;
 }
 
 message S_EnterGame {
-  string context = 1;
+  PlayerInfo player = 1;
 }
 
-message Person {
-  int32 packetHeader = 1;
+message S_LeaveGame {
+}
+
+message S_Spawn {
+  repeated PlayerInfo players = 1;
+}
+
+message S_Despawn {
+  repeated int32 playerIds = 1;
+}
+
+message C_Move {
+  int32 posX = 1;
+  int32 posY = 2;
+	// dir도 필요할 수 있겠다
+}
+
+// C_Move는 어떤 ClientSession인지 알지만 
+// Server에서 보낼 떄는 누군지 모름. 따라서 누가 이동할지 id를 넣어줌
+message S_Move {
+  int32 playerId = 1;
+  int32 posX = 2;
+  int32 posY = 3;
+}
+
+message PlayerInfo {
+  // ingame id, db에 들어가는 id는 아님
+  // Server가 뜰때마다 바뀔 수 있는 식별자
+  int32 playerId = 1;
   string name = 2;
-  int32 id = 3;  // Unique ID number for this person.
-  string email = 4;
-
-  enum PhoneType {
-    MOBILE = 0;
-    HOME = 1;
-    WORK = 2;
-  }
-
-  message PhoneNumber {
-    string number = 1;
-    PhoneType type = 2;
-  }
-
-  repeated PhoneNumber phones = 5;
-  google.protobuf.Timestamp last_updated = 6;
+  int32 posX = 3;
+  int32 posY = 4;
 }
 
-// Our address book file is just one of these.
-message AddressBook {
-  repeated Person people = 1;
-}
+
+
 

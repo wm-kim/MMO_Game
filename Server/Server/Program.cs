@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using ServerCore;
 using Google.Protobuf;
 using Google.Protobuf.Protocol;
-using static Google.Protobuf.Protocol.Person.Types;
+using Server.Game;
 
 namespace Server
 {
@@ -25,7 +25,10 @@ namespace Server
 
         static void Main(string[] args)
         {
-           
+            // 1번방 생성, 나중에는 데이터로 빼서 시작지역을 정해줌.
+            // 지금은 1번방만 사용할 것이다.
+            RoomManager.Instance.Add();
+
             string host = Dns.GetHostName(); // local 컴퓨터의 host이름
             IPHostEntry ipHost = Dns.GetHostEntry(host); // 네트워크망 안에 있는 DNS 서버가 해줌
             // 배열로 되어있는 이유, 트래픽이 많을 경우 ip를 여러개 사용하여 부하 분산

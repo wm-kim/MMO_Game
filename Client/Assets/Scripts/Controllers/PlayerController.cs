@@ -6,14 +6,15 @@ using static Define;
 
 public class PlayerController : CreatureController
 {
-    Coroutine _coSkill;
+    protected Coroutine _coSkill;
     // skill이 많아지면 어떤 skill의 어떤 animation을 틀지는
     // skill관련된 datasheet를 빼서 관리 PlayerController로부터 분리
-    bool _rangeSkill = false;
+    protected bool _rangeSkill = false;
 
     // start update 없어도 creature에 있는 start update가 자동 호출
     protected override void Init()
     {
+        // Sprite, Animator component 가져오기
         base.Init();
     }
 
@@ -103,27 +104,8 @@ public class PlayerController : CreatureController
 
     protected override void UpdateController()
     {
-        switch (State)
-        {
-            // idle일때 혹은 Moving일 때 key 입력을 받는다.
-            case CreatureState.Idle:
-                GetDirInput();
-                 // GetIdleInput(); 
-                 // idle일 때 처리는 base에서 처리
-                break;
-            case CreatureState.Moving:
-                GetDirInput();
-                break;
-
-        }
-
+       // 나중에 network을 이용하여 조종, keyboard 입력 안받음
         base.UpdateController();
-    }
-
-    void LateUpdate()
-    {
-        //2d z값은 기본적으로 0 0 -10, z값을 바꾸면 화면이 안보이는 문제가 생길 수 있다
-        Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
     }
 
     protected override void UpdateIdle()
@@ -134,56 +116,7 @@ public class PlayerController : CreatureController
             State = CreatureState.Moving;
             return;
         }
-
-        // skill 상태로 갈지 확인
-        if (Input.GetKey(KeyCode.Space))
-        {
-            State = CreatureState.Skill;
-            // _coSkill = StartCoroutine("CoStartPunch");
-            _coSkill = StartCoroutine("CoStartShootArrow");
-        }
     }
-
-    // 키보드 입력을 받아서 방향 설정
-    // skill이 나가는 동안에는 입력을 받을 수 없게 할것
-    void GetDirInput()
-    {
-        if (Input.GetKey(KeyCode.W))
-        {
-            Dir = MoveDir.Up;
-
-        }
-        else if (Input.GetKey(KeyCode.S))
-        {
-            Dir = MoveDir.Down;
-        }
-        else if (Input.GetKey(KeyCode.A))
-        {
-            Dir = MoveDir.Left;
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            Dir = MoveDir.Right;
-        }
-        else
-        {
-            Dir = MoveDir.None;
-        }
-    }
-
-    // 나중에 skill이 많아지면 skill class를 따로 파서 전문적으로 관리
-    // 지금은 playController에 기생하는 형태
-
-    // anim 바꿔준다.
-    //private void GetIdleInput()
-    //{
-    //    if (Input.GetKey(KeyCode.Space))
-    //    {
-    //        State = CreatureState.Skill;
-    //        // _coSkill = StartCoroutine("CoStartPunch");
-    //        _coSkill = StartCoroutine("CoStartShootArrow");
-    //    }
-    //}
 
     IEnumerator CoStartPunch()
     {

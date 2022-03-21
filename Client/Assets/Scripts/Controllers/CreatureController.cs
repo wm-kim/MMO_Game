@@ -5,6 +5,8 @@ using static Define;
 
 public class CreatureController : MonoBehaviour
 {
+    public int Id { get; set; }
+
     [SerializeField]
     public float _speed = 5.0f;
 
@@ -17,6 +19,8 @@ public class CreatureController : MonoBehaviour
     // 움직이지 못할 때 스킬 시전 가능하게 할거임
     // boolean을 늘리지 않고 state로 관리
     // protected bool _isMoving = false;
+
+    // idle상태이고 dir이 non이 아닌 상태에서 UpdateIdle이 호출되면 바로 moving state로 바로바뀜
     [SerializeField]
     protected CreatureState _state = CreatureState.Idle;
     public virtual CreatureState State
@@ -33,7 +37,7 @@ public class CreatureController : MonoBehaviour
     }
 
     // 마지막으로 바라보고 있던 방향
-    // 꼼수 none이면 다 건너띄어서 idle animation을 안틀어줌.
+    // 꼼수 none이면 다 건너띄어서 idle animation이 안된다.
     // _dir이 none이 아니라면 UpdateIsMoving(UpdateIdle)에서 자동으로 Moving State로 만들어줌
     protected MoveDir _lastDir = MoveDir.Down;
     // 게임을 처음실행할 때 움직이는 것을 막기 위해 초기값을 아무거나 설정
@@ -96,6 +100,7 @@ public class CreatureController : MonoBehaviour
     }
 
     // state를 먼저 check
+    // (idle일떄나 skill을 시전할때는 lastdir 확인, moving일때는 dir확인)
     protected virtual void UpdateAnimation()
     {
         // 이중 switch는 가독성이 떨어져서 if-else
@@ -264,7 +269,7 @@ public class CreatureController : MonoBehaviour
     // 다른 방식으로 진행 하고 싶으면 이것만 override 
     protected virtual void MoveToNextPos()
     {
-        // 버그 자연 치유, 계속 누르고 있으면 
+        // 버그 자동으로 해결, 계속 누르고 있으면 
         // 중간에 idle animation이 나오지 않는다.
         if(_dir == MoveDir.None)
         {
@@ -293,7 +298,7 @@ public class CreatureController : MonoBehaviour
         // 굳이 필요 없음 dir이 Non이 아니면 계속 움직이고 싶은 상태
         // State = CreatureState.Moving;
 
-        // 공용으로 사용하기 어려운게 화살인지 player인지에 때라 나뉘었음
+        // 이부분 공용으로 사용하기 어려운게 화살인지 player인지에 따라 나뉘었음
         if (Managers.Map.CanGo(destPos))
         {
             if (Managers.Object.Find(destPos) == null)
