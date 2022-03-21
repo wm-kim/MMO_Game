@@ -12,13 +12,31 @@ using Google.Protobuf;
 
 namespace Server
 {
-    // 모든 정보를 clientsession에 넣지 않고, 새로운 class 예를 들면 player class를 판다음에 
-    // 거기다 컨텐츠 코드를 넣어넣고 player가 연결된 client sessions을 물고있게끔 만들어줌
-    // 일단은 간단하게 하기 위해서 여기다 모든 정보를 넣어둠
     class ClientSession : PacketSession
     {
        
         public int SessionId { get; set; } // Session을 구분하기 위한 id
+
+        public void Send(IMessage packet, int id)
+        {
+            // 안에 있는건 대문자로 하는 것이 convention이긴 한데 이름이 다음과 같이 변함
+            // MsgId.SChat
+            // 이름을 이용해서 찾아줌 (자동화)
+            string msgName = packet.Descriptor.Name.Replace("_", string.Empty);
+            // 이름이 없으면 정상적으로 parsing이 안되면서 crash가 날 수 있음. exception 해도 됨
+            // Reflection 이용
+            MsgId msgId = (MsgId)Enum.Parse(typeof(MsgId), msgName);
+
+            // 이렇게 만들어줘야지 Session에서 사용할 수 있다.
+            ushort size = (ushort)packet.CalculateSize();
+            byte[] sendBuffer = new byte[size + 4];
+            // 내부에서 byte배열을 한번 더 할당하지만 비트연산을 이용해서 직접넣는 방법이 있다.
+            Array.Copy(BitConverter.GetBytes((ushort)(size + 4)), 0, sendBuffer, 0, sizeof(ushort));
+            Array.Copy(BitConverter.GetBytes((ushort)msgId), 0, sendBuffer, 2, sizeof(ushort));
+            Array.Copy(packet.ToByteArray(), 0, sendBuffer, 4, size);
+
+            Send(new ArraySegment<byte>(sendBuffer));
+        }
 
         // 엔진과 컨텐츠 분리
         public override void OnConnected(EndPoint endPoint)
@@ -33,19 +51,7 @@ namespace Server
                 Context = "안녕하세요"
             };
 
-            // 안에 있는건 대문자로 하는 것이 convention이긴 한데 이름이 다음과 같이 변함
-            // MsgId.SChat
-
-            // 이렇게 만들어줘야지 Session에서 사용할 수 있다.
-            ushort size = (ushort)chat.CalculateSize();
-            byte[] sendBuffer = new byte[size + 4];
-            // 내부에서 byte배열을 한번 더 할당하지만 비트연산을 이용해서 직접넣는 방법이 있다.
-            Array.Copy(BitConverter.GetBytes(size + 4), 0, sendBuffer, 0, sizeof(ushort));
-            ushort protocolId = (ushort)MsgId.SChat;
-            Array.Copy(BitConverter.GetBytes(protocolId), 0, sendBuffer, 2, sizeof(ushort));
-            Array.Copy(chat.ToByteArray(), 0, sendBuffer, 4, size);
-
-            Send(new ArraySegment<byte>(sendBuffer));
+            Send(chat, (int)MsgId.SChat);
         }
 
         public override void OnDisconnected(EndPoint endPoint)
