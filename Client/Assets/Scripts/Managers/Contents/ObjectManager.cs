@@ -19,6 +19,7 @@ public class ObjectManager
             go.name = info.Name;
             _objects.Add(info.PlayerId, go);
 
+            // Player를 만들자 마자 setting하고 있는데 Init을 해야 animator와 sprite가 있다.
             MyPlayer = go.GetComponent<MyPlayerController>();
             MyPlayer.Id = info.PlayerId;
             MyPlayer.PosInfo = info.PosInfo;

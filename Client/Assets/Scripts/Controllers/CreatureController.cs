@@ -88,8 +88,8 @@ public class CreatureController : MonoBehaviour
 
     // 마지막으로 바라보고 있던 방향
     // 꼼수 none이면 다 건너띄어서 idle animation이 안된다.
-    // 초반 접속했을 때 바라보는 방향이 된다.
-    protected MoveDir _lastDir = MoveDir.Down;
+    // 초반 접속했을 때 바라보는 방향이 된다. 이제는 _lastdir 사용안함
+    // protected MoveDir _lastDir = MoveDir.Down;
 
     // 게임을 처음실행할 때 움직이는 것을 막기 위해 초기값을 아무거나 설정
     // UpdateAnimation이 호출이 안되고 초반 설정값인 오른쪽 달리기를 재생한다.
@@ -106,9 +106,6 @@ public class CreatureController : MonoBehaviour
             // 애매할때는 공용 부분에 놓고 따로 빼서 관리하는 게 좋다. -> UpdateAnimation
             PosInfo.MoveDir = value;
 
-            if (value != MoveDir.None)
-                _lastDir = value; // idle animation의 방향 선택
-
             UpdateAnimation();
             _updated = true;
         }
@@ -122,17 +119,15 @@ public class CreatureController : MonoBehaviour
             return MoveDir.Left;
         else if (dir.y > 0)
             return MoveDir.Up;
-        else if (dir.y < 0)
+        else 
             return MoveDir.Down;
-        else
-            return MoveDir.None;
     }
 
     // 바로 앞칸의 cell을 얻고 싶다.
     public Vector3Int GetFrontCellPos()
     {
         Vector3Int cellPos = CellPos;
-        switch(_lastDir)
+        switch(Dir)
         {
             case MoveDir.Up:
                 cellPos += Vector3Int.up; // (0, 1, 0)
@@ -158,7 +153,7 @@ public class CreatureController : MonoBehaviour
         // 이중 switch는 가독성이 떨어져서 if-else
         if(State == CreatureState.Idle)
         {
-            switch(_lastDir)
+            switch(Dir)
             {
                 case MoveDir.Up:
                     _animator.Play("IDLE_BACK");
@@ -200,14 +195,12 @@ public class CreatureController : MonoBehaviour
                     _animator.Play("WALK_RIGHT");
                     _sprite.flipX = false;
                     break;
-                case MoveDir.None:
-                    break;
             }
         }
         else if (State == CreatureState.Skill)
         {
             // 마지막으로 바라본 기준으로 skill이 나가야하므로 _dir대신 
-            switch (_lastDir)
+            switch (Dir)
             {
                 case MoveDir.Up:
                     _animator.Play("ATTACK_BACK");
@@ -225,8 +218,6 @@ public class CreatureController : MonoBehaviour
                 case MoveDir.Right:
                     _animator.Play("ATTACK_RIGHT");
                     _sprite.flipX = false;
-                    break;
-                case MoveDir.None:
                     break;
             }
         }
@@ -256,7 +247,7 @@ public class CreatureController : MonoBehaviour
 
         // 기본값이라 값이 서버에서 아무런 값이 들어오지 않았을 경우 다시 초기값 대입
         State = CreatureState.Idle;
-        Dir = MoveDir.None;
+        Dir = MoveDir.Down;
         // (0,0,0)이 아니라 Server 쪽에서 요청한 Player위치에 만들어주는게 정상적
         // CellPos = new Vector3Int(0, 0, 0);
         UpdateAnimation();

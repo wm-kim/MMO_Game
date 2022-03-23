@@ -54,7 +54,7 @@ namespace Server
                 // 기본값이라 값이 안온것 같을 때는 Client쪽에서도 기본값으로 다시 초기화해준다.
                 MyPlayer.Info.Name = $"Player_{MyPlayer.Info.PlayerId}";
                 MyPlayer.Info.PosInfo.State = CreatureState.Idle;
-                MyPlayer.Info.PosInfo.MoveDir = MoveDir.None;
+                MyPlayer.Info.PosInfo.MoveDir = MoveDir.Down;
                 MyPlayer.Info.PosInfo.PosX = 0;
                 MyPlayer.Info.PosInfo.PosY = 0;
 

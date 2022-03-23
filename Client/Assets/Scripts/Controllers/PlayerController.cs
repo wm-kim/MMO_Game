@@ -22,10 +22,13 @@ public class PlayerController : CreatureController
     // Player 전용 animation
     protected override void UpdateAnimation()
     {
+        if (_animator == null && _sprite == null) return;
+        // 어짜피 나중에 init하는 코드에서 UpdateAnimation을 다시 할 것임
+
         // 이중 switch는 가독성이 떨어져서 if-else
         if (State == CreatureState.Idle)
         {
-            switch (_lastDir)
+            switch (Dir)
             {
                 case MoveDir.Up:
                     _animator.Play("IDLE_BACK");
@@ -67,14 +70,12 @@ public class PlayerController : CreatureController
                     _animator.Play("WALK_RIGHT");
                     _sprite.flipX = false;
                     break;
-                case MoveDir.None:
-                    break;
             }
         }
         else if (State == CreatureState.Skill)
         {
             // 마지막으로 바라본 기준으로 skill이 나가야하므로 _dir대신 
-            switch (_lastDir)
+            switch (Dir)
             {
                 case MoveDir.Up:
                     _animator.Play(_rangeSkill ? "ATTACK_WEAPON_BACK" : "ATTACK_BACK");
@@ -93,8 +94,6 @@ public class PlayerController : CreatureController
                     _animator.Play(_rangeSkill ? "ATTACK_WEAPON_RIGHT" : "ATTACK_RIGHT");
                     _sprite.flipX = false;
                     break;
-                case MoveDir.None:
-                    break;
             }
         }
         else
@@ -107,16 +106,6 @@ public class PlayerController : CreatureController
     {
        // 나중에 network을 이용하여 조종, keyboard 입력 안받음
         base.UpdateController();
-    }
-
-    protected override void UpdateIdle()
-    {
-        // 이동상태 확인 UpdateIdle에서 UpdateMoving으로 넘어가는 코드
-        if(Dir != MoveDir.None) 
-        {
-            State = CreatureState.Moving;
-            return;
-        }
     }
 
     public void UseSkill(int skillId)
@@ -156,7 +145,7 @@ public class PlayerController : CreatureController
         // ArrowController Init에서 moving state로 설정해줌
         ArrowController ac = go.GetComponent<ArrowController>();
         // 키보드를 안누른 상태라고 해도 이전의 마지막으로 바라보고 있던 상태로 진행
-        ac.Dir = _lastDir;
+        ac.Dir = Dir;
         ac.CellPos = CellPos;
 
         // 대기 시간

@@ -55,7 +55,7 @@ public class MonsterController : CreatureController
         base.Init();
         // state & dir를 바꿔주면 UpdateAnimation 
         State = CreatureState.Idle;
-        Dir = MoveDir.None;
+        Dir = MoveDir.Down;
         _speed = 3.0f;
         _rangedSkill = (Random.Range(0, 2) == 0 ? true : false);
 
@@ -250,7 +250,7 @@ public class MonsterController : CreatureController
         GameObject go = Managers.Resource.Instantiate("Creature/Arrow");
         ArrowController ac = go.GetComponent<ArrowController>();
         // 키보드를 안누른 상태라고 해도 이전의 마지막으로 바라보고 있던 상태로 진행
-        ac.Dir = _lastDir;
+        ac.Dir = Dir;
         ac.CellPos = CellPos;
 
         // 대기 시간

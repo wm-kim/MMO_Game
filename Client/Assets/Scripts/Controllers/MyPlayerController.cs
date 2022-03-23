@@ -6,6 +6,9 @@ using static Define;
 
 public class MyPlayerController : PlayerController
 {
+    // None 대신에 bool로 확인  input과 관련된것이므로 myplayer에 둔다
+    bool _moveKeyPressed = false;
+
     protected override void Init()
     {
         // Sprite, Animator component 가져오기
@@ -32,7 +35,7 @@ public class MyPlayerController : PlayerController
     protected override void UpdateIdle()
     {
         // 이동상태 확인 UpdateIdle에서 UpdateMoving으로 넘어가는 코드
-        if (Dir != MoveDir.None)
+        if (_moveKeyPressed)
         {
             State = CreatureState.Moving;
             return;
@@ -45,8 +48,9 @@ public class MyPlayerController : PlayerController
         {
             Debug.Log("SKill !");
 
-            C_Skill skill = new C_Skill { Info = new SkillInfo() };
-            skill.Info.SkillId = 1; // punch
+            C_Skill skill = new C_Skill { Info = new SkillInfo() }; 
+            // 1 punch 2 arrow 
+            skill.Info.SkillId = 2; 
             // Server에서 검증 후 S_SkillHandler에서 UseSkill 호출
             Managers.Network.Send(skill); 
 
@@ -75,6 +79,8 @@ public class MyPlayerController : PlayerController
     // skill이 나가는 동안에는 입력을 받을 수 없게 할것
     void GetDirInput()
     {
+        _moveKeyPressed = true;
+
         if (Input.GetKey(KeyCode.W))
         {
             Dir = MoveDir.Up;
@@ -93,7 +99,7 @@ public class MyPlayerController : PlayerController
         }
         else
         {
-            Dir = MoveDir.None;
+            _moveKeyPressed = false;
         }
     }
 
@@ -106,8 +112,7 @@ public class MyPlayerController : PlayerController
 
         // 버그 자동으로 해결, 계속 누르고 있으면 
         // 중간에 idle animation이 나오지 않는다.
-        // dir이 none이면 그리고 idle animation으로 바꿔줌 
-        if (Dir == MoveDir.None)
+        if (_moveKeyPressed == false) // 아무 입력도 누르지 않으면
         {
             // UpdateAnimation
             State = CreatureState.Idle;

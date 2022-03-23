@@ -9,7 +9,7 @@ public class ArrowController : CreatureController
     protected override void Init()
     {
         // 화살 그림 방향 수정
-        switch(_lastDir)
+        switch(Dir)
         {
             case MoveDir.Up:
                 transform.rotation = Quaternion.Euler(0, 0, 0);
