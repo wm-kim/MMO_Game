@@ -28,6 +28,7 @@ public struct PQNode : IComparable<PQNode>
 // map load 삭제 역할, load가 되었으면 collision file 추출
 public class MapManager
 {
+	// map을 구성하는 component
     public Grid CurrentGrid { get; private set; }
 
     public int MinX { get; set; }

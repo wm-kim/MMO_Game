@@ -18,6 +18,12 @@ public class MapEditor
     [MenuItem("Tools/GenerateMap %g")]
     private static void GenerateMap()
     {
+        GenerateByPath("Assets/Resources/Map");
+        GenerateByPath("../Common/MapData");
+    }
+
+    private static void GenerateByPath(string pathPrefix)
+    {
         // ok button을 누르면 true로 설정
         //if(EditorUtility.DisplayDialog("Hello World", "Create?", "Create", "Canel"))
         //{
@@ -26,7 +32,7 @@ public class MapEditor
 
         GameObject[] gameobjects = Resources.LoadAll<GameObject>("Prefabs/Map");
 
-        foreach(GameObject go in gameobjects)
+        foreach (GameObject go in gameobjects)
         {
             Tilemap tmBase = Util.FindChild<Tilemap>(go, "Tilemap_Base", true);
 
@@ -34,7 +40,7 @@ public class MapEditor
             Tilemap tm = Util.FindChild<Tilemap>(go, "Tilemap_Collision", true);
 
             // 파일을 만들기 서버와 공유, 바이너리, text 형식(이걸 선택)
-            using (var writer = File.CreateText($"Assets/Resources/Map/{go.name}.txt"))
+            using (var writer = File.CreateText($"{pathPrefix}/{go.name}.txt"))
             {
                 writer.WriteLine(tmBase.cellBounds.xMin);
                 writer.WriteLine(tmBase.cellBounds.xMax);
@@ -52,7 +58,6 @@ public class MapEditor
                     }
                     writer.WriteLine();
                 }
-
             }
         }
     }

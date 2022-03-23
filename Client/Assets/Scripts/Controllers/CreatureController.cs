@@ -1,3 +1,4 @@
+using Google.Protobuf.Protocol;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,8 +11,55 @@ public class CreatureController : MonoBehaviour
     [SerializeField]
     public float _speed = 5.0f;
 
-    // protected Vector3Int _cellPos = Vector3Int.zero;
-    public Vector3Int CellPos { get; set; } = Vector3Int.zero;  
+    // dirty flag : dir, state, cellpos 셋중하나에 변경사항 추적
+    // my player만 check할것이므로 creature controller에 넣는것은 좀 애매하긴하다.
+    protected bool _updated = false;
+
+    PositionInfo _positionInfo = new PositionInfo();
+
+    // Init에서 초기값이 설정된다.
+    // UpdateIdle에서 dir에 따라 moving State로 바뀌거나
+    // MoveToNextPos에서 입력을 받지 않을 경우 Dir이 non이되면서 Idle state로 바뀐다.
+    public PositionInfo PosInfo 
+    { 
+        get { return _positionInfo; } 
+        set
+        {
+            // 굳이 필요없음
+            if (_positionInfo.Equals(value)) return;
+
+            // _positionInfo = value;
+            // _Lastdir도 같이 업데이트 받기 위해서 직접적으로 값을 넣어주지 않고
+            // 하나씩 업데이트
+            CellPos = new Vector3Int(value.PosX, value.PosY, 0);
+            State = value.State;
+            Dir = value.MoveDir;
+            // UpdateAnimation();
+        }
+    }
+
+    // cellpos와 transform 맞춰주는 함수
+    public void SyncPos()
+    {
+        Vector3 destPos = Managers.Map.CurrentGrid.CellToWorld(CellPos) + new Vector3(0.5f, 0.5f);
+        transform.position = destPos;
+    }
+
+    public Vector3Int CellPos 
+    { 
+        get
+        {
+            return new Vector3Int(PosInfo.PosX, PosInfo.PosY, 0);
+        }
+        set
+        {
+            if (PosInfo.PosX == value.x && PosInfo.PosY == value.y) return;
+
+            PosInfo.PosX = value.x;
+            PosInfo.PosY = value.y;
+            _updated = true;
+        }
+    }  
 
     protected Animator _animator;
     protected SpriteRenderer _sprite;
@@ -21,44 +69,48 @@ public class CreatureController : MonoBehaviour
     // protected bool _isMoving = false;
 
     // idle상태이고 dir이 non이 아닌 상태에서 UpdateIdle이 호출되면 바로 moving state로 바로바뀜
-    [SerializeField]
-    protected CreatureState _state = CreatureState.Idle;
+    // protected CreatureState _state = CreatureState.Idle;
+
     public virtual CreatureState State
     {
-        get { return _state; }
+        get { return PosInfo.State; }
         set
         {
-            if (_state == value)
+            if (PosInfo.State == value)
                 return;
-            
-            _state = value;
-            UpdateAnimation(); // State & dir 양쪽 상태중 어느 것이 하나가 바뀌면 호출
+
+            PosInfo.State = value;
+            // State & dir 양쪽 상태중 어느 것이 하나가 바뀌면 호출
+            UpdateAnimation(); 
+            _updated = true;
         }
     }
 
     // 마지막으로 바라보고 있던 방향
     // 꼼수 none이면 다 건너띄어서 idle animation이 안된다.
-    // _dir이 none이 아니라면 UpdateIsMoving(UpdateIdle)에서 자동으로 Moving State로 만들어줌
+    // 초반 접속했을 때 바라보는 방향이 된다.
     protected MoveDir _lastDir = MoveDir.Down;
+
     // 게임을 처음실행할 때 움직이는 것을 막기 위해 초기값을 아무거나 설정
     // UpdateAnimation이 호출이 안되고 초반 설정값인 오른쪽 달리기를 재생한다.
-    [SerializeField]
-    protected MoveDir _dir = MoveDir.Down;
+    // protected MoveDir _dir = MoveDir.Down;
+    
     public MoveDir Dir
     {
-        get { return _dir; }
+        get { return PosInfo.MoveDir; }
         set
         {
-            if (_dir == value) return;
+            if (PosInfo.MoveDir == value) return;
             // 맨 마지막에 이동했던 방향으로 idle animation
             // dir를 선택할 때 바꾸는 것이 맞는지 아니면 State에서 animation을 관리하는게 맞는지 
             // 애매할때는 공용 부분에 놓고 따로 빼서 관리하는 게 좋다. -> UpdateAnimation
-            _dir = value;
+            PosInfo.MoveDir = value;
 
             if (value != MoveDir.None)
                 _lastDir = value; // idle animation의 방향 선택
 
             UpdateAnimation();
+            _updated = true;
         }
     }
 
@@ -104,7 +156,7 @@ public class CreatureController : MonoBehaviour
     protected virtual void UpdateAnimation()
     {
         // 이중 switch는 가독성이 떨어져서 if-else
-        if(_state == CreatureState.Idle)
+        if(State == CreatureState.Idle)
         {
             switch(_lastDir)
             {
@@ -127,9 +179,9 @@ public class CreatureController : MonoBehaviour
                     break;
         }
         }
-        else if(_state == CreatureState.Moving)
+        else if(State == CreatureState.Moving)
         {
-            switch (_dir)
+            switch (Dir)
             {
                 case MoveDir.Up:
                     _animator.Play("WALK_BACK");
@@ -152,7 +204,7 @@ public class CreatureController : MonoBehaviour
                     break;
             }
         }
-        else if (_state == CreatureState.Skill)
+        else if (State == CreatureState.Skill)
         {
             // 마지막으로 바라본 기준으로 skill이 나가야하므로 _dir대신 
             switch (_lastDir)
@@ -201,6 +253,13 @@ public class CreatureController : MonoBehaviour
         // 어떤 cell 위치에서 world 좌표, 지금은 grid size가 unit size와 같으므로 굳이 사용안해도되긴함
         Vector3 pos = Managers.Map.CurrentGrid.CellToWorld(CellPos) + new Vector3(0.5f, 0.5f);
         transform.position = pos;
+
+        // 기본값이라 값이 서버에서 아무런 값이 들어오지 않았을 경우 다시 초기값 대입
+        State = CreatureState.Idle;
+        Dir = MoveDir.None;
+        // (0,0,0)이 아니라 Server 쪽에서 요청한 Player위치에 만들어주는게 정상적
+        // CellPos = new Vector3Int(0, 0, 0);
+        UpdateAnimation();
     }
 
     protected virtual void UpdateController()
@@ -224,16 +283,18 @@ public class CreatureController : MonoBehaviour
 
     // 이동 가능한 상태(Idle)일때 실제 좌표 이동
     // -> 다른 class에서 공동으로 사용하기 위해 수정
+    // PlayerController에서 dir에 따라 moving state로 바꿔줌
     protected virtual void UpdateIdle()
     {
         // 완전히 이동 animation이 끝나기 전까지는 이동할 수 없게 막음
         // if (State == CreatureState.Idle && _dir != MoveDir.None)
-        // 호출하는 쪽의 분기로 들어감 
+        // 호출하는 쪽의 분기로 들어감
+        // 
         // MoveToNextPos로 이동
         // UpdateIdle에서 UpdateMoving으로 넘어가는 코드가 필요하게됨 
     }
 
-    // client상에서 부드럽게 이동하기 위한 용도
+    // 방향에 따라 client상에서 부드럽게 이동하기 위한 용도
     protected virtual void UpdateMoving()
     {
         // 조건을 추가하는 것보다 Update문에서 State따라 분기를 두는게 코드 구성이 좋음
@@ -248,7 +309,7 @@ public class CreatureController : MonoBehaviour
         if (dist < _speed * Time.deltaTime)
         {
             transform.position = destPos;
-            // 그 다음 움직임
+            // 실질적으로 좌표 이동하는 함수
             MoveToNextPos();
 
             // 예외적으로 animation을 직접 control
@@ -267,47 +328,12 @@ public class CreatureController : MonoBehaviour
     }
 
     // 다른 방식으로 진행 하고 싶으면 이것만 override 
+    // 입력으로 dir을 받고 그에 따라서 좌표의 이동이 결정됨
+    // 받지 않으면 바라보는 방향으로 계속 이동
     protected virtual void MoveToNextPos()
     {
-        // 버그 자동으로 해결, 계속 누르고 있으면 
-        // 중간에 idle animation이 나오지 않는다.
-        if(_dir == MoveDir.None)
-        {
-            // UpdateAnimation
-            State = CreatureState.Idle;
-            return;
-        }
-
-        Vector3Int destPos = CellPos;
-        switch (_dir)
-        {
-            case MoveDir.Up:
-                destPos += Vector3Int.up;
-                break;
-            case MoveDir.Down:
-                destPos += Vector3Int.down;
-                break;
-            case MoveDir.Left:
-                destPos += Vector3Int.left;
-                break;
-            case MoveDir.Right:
-                destPos += Vector3Int.right;
-                break;
-        }
-
-        // 굳이 필요 없음 dir이 Non이 아니면 계속 움직이고 싶은 상태
-        // State = CreatureState.Moving;
-
-        // 이부분 공용으로 사용하기 어려운게 화살인지 player인지에 따라 나뉘었음
-        if (Managers.Map.CanGo(destPos))
-        {
-            if (Managers.Object.Find(destPos) == null)
-            {
-                CellPos = destPos;
-                // 버그 수정, 이동할 수 없어도 계속 움직이는 animation을 틀어주도록
-                // State = CreatureState.Moving;
-            }
-        }
+        // MyPlayer만 이동 - 남의 Player은 직접적으로 움직이지 않는다.
+        // 서버가 broadcasting 한 토대로 다른 player를 맞춰주는 형태로 동작 
     }
 
     protected virtual void UpdateSkill()

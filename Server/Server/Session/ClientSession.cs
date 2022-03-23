@@ -48,12 +48,16 @@ namespace Server
 
             // DB에서 player 정보를 받아와서 client에 보내주는 작업이 필요
 
-            // 방에 입장시키고 player를 만드는 부분 필요
+            // Player를 만든다.
             MyPlayer = PlayerManager.Instance.Add();
             {
+                // 기본값이라 값이 안온것 같을 때는 Client쪽에서도 기본값으로 다시 초기화해준다.
                 MyPlayer.Info.Name = $"Player_{MyPlayer.Info.PlayerId}";
-                MyPlayer.Info.PosX = 0;
-                MyPlayer.Info.PosY = 0;
+                MyPlayer.Info.PosInfo.State = CreatureState.Idle;
+                MyPlayer.Info.PosInfo.MoveDir = MoveDir.None;
+                MyPlayer.Info.PosInfo.PosX = 0;
+                MyPlayer.Info.PosInfo.PosY = 0;
+
                 MyPlayer.Session = this;
             }
 
@@ -76,7 +80,7 @@ namespace Server
             // singleton이 아니라 handler 방식으로 등록해서 호출하는 방식으로해도 상관없다.
             // PacketManager에서 packet을 deserialize하고 handler를 호출한다.
             // 인자로 handler callback함수를 받는다. 명시하지 않으면 처음 register한 것이 들어감
-            // PacketManager.Instance.OnRecvPacket(this, buffer);
+            PacketManager.Instance.OnRecvPacket(this, buffer);
         }
 
         public override void OnSend(int numofBytes)

@@ -1,3 +1,4 @@
+using Google.Protobuf.Protocol;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ public class PlayerController : CreatureController
     protected override void UpdateAnimation()
     {
         // 이중 switch는 가독성이 떨어져서 if-else
-        if (_state == CreatureState.Idle)
+        if (State == CreatureState.Idle)
         {
             switch (_lastDir)
             {
@@ -45,9 +46,9 @@ public class PlayerController : CreatureController
                     break;
             }
         }
-        else if (_state == CreatureState.Moving)
+        else if (State == CreatureState.Moving)
         {
-            switch (_dir)
+            switch (Dir)
             {
                 case MoveDir.Up:
                     _animator.Play("WALK_BACK");
@@ -70,7 +71,7 @@ public class PlayerController : CreatureController
                     break;
             }
         }
-        else if (_state == CreatureState.Skill)
+        else if (State == CreatureState.Skill)
         {
             // 마지막으로 바라본 기준으로 skill이 나가야하므로 _dir대신 
             switch (_lastDir)
@@ -118,22 +119,35 @@ public class PlayerController : CreatureController
         }
     }
 
+    public void UseSkill(int skillId)
+    {
+        if (skillId == 1)
+        {
+            _coSkill = StartCoroutine("CoStartPunch");
+        }
+    }
+
+    protected virtual void CheckUpdatedFlag() { }
+
     IEnumerator CoStartPunch()
     {
-        // 피격 판정
-        GameObject go = Managers.Object.Find(GetFrontCellPos());
-        if(go != null)
-        {
-            CreatureController cc = go.GetComponent<CreatureController>();
-            if (cc != null) cc.OnDamage();
-        }
+        // 피격 판정 - Server 위임
+        //GameObject go = Managers.Object.Find(GetFrontCellPos());
+        //if(go != null)
+        //{
+        //    CreatureController cc = go.GetComponent<CreatureController>();
+        //    if (cc != null) cc.OnDamage();
+        //}
 
         // 대기 시간
         _rangeSkill = false;
+        State = CreatureState.Skill;
         yield return new WaitForSeconds(0.5f);
         // 0.5초마다 idle 상태로 돌아감
         State = CreatureState.Idle;
         _coSkill = null;
+        // C_Move packet 전송, Server쪽에 idle 상태로 돌아가라고 알려줌
+        CheckUpdatedFlag();
     }
 
     IEnumerator CoStartShootArrow()

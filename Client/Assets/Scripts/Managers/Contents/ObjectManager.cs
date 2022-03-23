@@ -21,7 +21,9 @@ public class ObjectManager
 
             MyPlayer = go.GetComponent<MyPlayerController>();
             MyPlayer.Id = info.PlayerId;
-            MyPlayer.CellPos = new Vector3Int(info.PosX, info.PosY, 0);
+            MyPlayer.PosInfo = info.PosInfo;
+            // cellpos에 따라 transform을 맞추어 주는것이 필요
+            MyPlayer.SyncPos();
         }
         else
         {
@@ -31,18 +33,32 @@ public class ObjectManager
 
             PlayerController pc = go.GetComponent<PlayerController>();
             pc.Id = info.PlayerId;
-            pc.CellPos = new Vector3Int(info.PosX, info.PosY, 0);
+            pc.PosInfo = info.PosInfo;
+            // cellpos에 따라 transform을 맞추어 주는것이 필요
+            pc.SyncPos();
         }
     }
+    public void Remove(int id) 
+    {
+        GameObject go = FindById(id);
+        if (go == null) return;
 
-    public void Add(int id, GameObject go) { _objects.Add(id, go); }
-    public void Remove(int id) { _objects.Remove(id); }
+        _objects.Remove(id); 
+        Managers.Resource.Destroy(go); 
+    }
 
     public void RemoveMyPlayer()
     {
         if (MyPlayer == null) return;
         Remove(MyPlayer.Id);
         MyPlayer = null;
+    }
+
+    public GameObject FindById(int id)
+    {
+        GameObject go = null;
+        _objects.TryGetValue(id, out go);
+        return go;
     }
 
     // 주어진 좌표에 object가 있는지 확인
@@ -70,5 +86,12 @@ public class ObjectManager
         return null;
     }
 
-    public void Clear() { _objects.Clear(); }
+    public void Clear() 
+    {
+        foreach (GameObject obj in _objects.Values)
+        {
+            Managers.Resource.Destroy(obj);
+        }
+        _objects.Clear(); 
+    }
 }

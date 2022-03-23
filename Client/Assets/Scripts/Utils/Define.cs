@@ -4,22 +4,23 @@ using UnityEngine;
 
 public class Define
 {
-    public enum CreatureState
-    {
-        Idle,
-        Moving,
-        Skill,
-        Dead,
-    }
+    // protobuf로 생성
+    //public enum CreatureState
+    //{
+    //    Idle,
+    //    Moving,
+    //    Skill,
+    //    Dead,
+    //}
 
-    public enum MoveDir
-    { 
-        None,
-        Up,
-        Down,
-        Left,
-        Right,
-    }
+    //public enum MoveDir
+    //{ 
+    //    None,
+    //    Up,
+    //    Down,
+    //    Left,
+    //    Right,
+    //}
 
     public enum Scene
     {

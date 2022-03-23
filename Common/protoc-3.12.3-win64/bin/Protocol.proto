@@ -12,6 +12,23 @@ enum MsgId {
   S_DESPAWN = 3;
   C_MOVE = 4;
   S_MOVE = 5;
+  C_SKILL = 6;
+  S_SKILL = 7;
+}
+
+enum CreatureState {
+  IDLE = 0;
+  MOVING = 1;
+  SKILL = 2;
+  DEAD = 3;
+}
+
+enum MoveDir {
+  NONE = 0;
+  UP = 1;
+  DOWN = 2;
+  LEFT = 3;
+  RIGHT = 4;
 }
 
 message S_EnterGame {
@@ -30,17 +47,23 @@ message S_Despawn {
 }
 
 message C_Move {
-  int32 posX = 1;
-  int32 posY = 2;
-	// dir도 필요할 수 있겠다
+  PositionInfo posInfo = 1;
 }
 
 // C_Move는 어떤 ClientSession인지 알지만 
 // Server에서 보낼 떄는 누군지 모름. 따라서 누가 이동할지 id를 넣어줌
 message S_Move {
   int32 playerId = 1;
-  int32 posX = 2;
-  int32 posY = 3;
+  PositionInfo posInfo = 2;
+}
+
+message C_Skill {
+	SkillInfo info = 1;
+}
+
+message S_Skill {
+	int32 playerId = 1;
+	SkillInfo info = 2;
 }
 
 message PlayerInfo {
@@ -48,10 +71,16 @@ message PlayerInfo {
   // Server가 뜰때마다 바뀔 수 있는 식별자
   int32 playerId = 1;
   string name = 2;
-  int32 posX = 3;
-  int32 posY = 4;
+  PositionInfo posInfo = 3;
 }
 
+message PositionInfo {
+  CreatureState state = 1; 
+  MoveDir moveDir = 2;
+  int32 posX = 3;
+  int32 PosY = 4;
+}
 
-
-
+message SkillInfo {
+	int32 skillId = 1;
+}

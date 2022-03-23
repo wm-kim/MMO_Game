@@ -14,9 +14,11 @@ namespace Server.Game
         Dictionary<int, GameRoom> _rooms = new Dictionary<int, GameRoom>();
         int _roomId = 1; // 하나씩 늘려갈 것
 
-        public GameRoom Add()
+        // GameRoom 생성
+        public GameRoom Add(int mapId)
         {
             GameRoom gameRoom = new GameRoom();
+            gameRoom.Init(mapId);
 
             lock(_lock)
             {

@@ -1,3 +1,4 @@
+using Google.Protobuf.Protocol;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -42,7 +43,7 @@ public class ArrowController : CreatureController
         // 여기서 _dir != MoveDir.None 확인해도 달라지는건 없음
         
         Vector3Int destPos = CellPos;
-        switch (_dir)
+        switch (Dir)
         {
             case MoveDir.Up:
                 destPos += Vector3Int.up;
@@ -58,7 +59,7 @@ public class ArrowController : CreatureController
                 break;
         }
 
-        State = CreatureState.Moving; // 자동으로 UpdaetMoving() 호출
+        State = CreatureState.Moving; // 자동으로 UpdateMoving() 호출
         // 이제 이부분도 굳이 안넣어줘도 됨
         // UpdateController base에서 UpdateIdle호출해서 이동상태로 넘어갈 것
 
@@ -69,9 +70,9 @@ public class ArrowController : CreatureController
             {
                 CellPos = destPos;
             }
-            else
+            else 
             {
-                // 화살의 피격 판정 object(monster)와 충돌
+                // 갈 수 있긴한데 화살의 피격 판정 object(monster)와 충돌
                 CreatureController cc = go.GetComponent<CreatureController>();
                 if (cc != null) cc.OnDamage();
 

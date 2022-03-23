@@ -27,7 +27,7 @@ namespace Server
         {
             // 1번방 생성, 나중에는 데이터로 빼서 시작지역을 정해줌.
             // 지금은 1번방만 사용할 것이다.
-            RoomManager.Instance.Add();
+            RoomManager.Instance.Add(1);
 
             string host = Dns.GetHostName(); // local 컴퓨터의 host이름
             IPHostEntry ipHost = Dns.GetHostEntry(host); // 네트워크망 안에 있는 DNS 서버가 해줌
