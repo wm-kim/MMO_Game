@@ -33,7 +33,7 @@ namespace Server.Game
 
             lock(_lock)
             {
-                _players.Add(newPlayer.Info.PlayerId, newPlayer);
+                _players.Add(newPlayer.Info.ObjectId, newPlayer);
                 newPlayer.Room = this;
 
                 // 본인한테 정보 전송
@@ -46,7 +46,7 @@ namespace Server.Game
                     S_Spawn spawnPacket = new S_Spawn();
                     foreach(Player p in _players.Values)
                     {
-                        if (newPlayer != p) spawnPacket.Players.Add(p.Info);
+                        if (newPlayer != p) spawnPacket.Objects.Add(p.Info);
                     }
                     newPlayer.Session.Send(spawnPacket);
                     // 지금은 contents code와 network로 보내는 코드 같이 묶여있음
@@ -54,7 +54,7 @@ namespace Server.Game
                 // 타인한테 정보 전송
                 {
                     S_Spawn spawnPacket = new S_Spawn();
-                    spawnPacket.Players.Add(newPlayer.Info);
+                    spawnPacket.Objects.Add(newPlayer.Info);
                     foreach (Player p in _players.Values)
                     {
                         if (newPlayer != p) p.Session.Send(spawnPacket);
@@ -82,7 +82,7 @@ namespace Server.Game
                 // 타인에게 정보 전송
                 {
                     S_Despawn despawnPacket = new S_Despawn();
-                    despawnPacket.PlayerIds.Add(player.Info.PlayerId);
+                    despawnPacket.PlayerIds.Add(player.Info.ObjectId);
                     foreach(Player p in _players.Values)
                     {
                         if(player != p) p.Session.Send(despawnPacket);
@@ -100,7 +100,7 @@ namespace Server.Game
             {
                 // TODO : 검증 client를 신용할 수 없다.
                 PositionInfo movePosInfo = movePacket.PosInfo;
-                PlayerInfo info = player.Info;
+                ObjectInfo info = player.Info;
 
                 // 다른 좌표로 이동할 경우 갈 수 있는지 확인, 해킹 방지
                 // 좌표는 이동안했는데 상태가 idle로 변경할 때도 사용하기 때문에 그럴때는 통과시켜줘야함
@@ -119,13 +119,14 @@ namespace Server.Game
 
                 // 다른 플레이어한테도 알려준다.
                 S_Move resMovePacket = new S_Move();
-                resMovePacket.PlayerId = player.Info.PlayerId;
+                resMovePacket.PlayerId = player.Info.ObjectId;
                 resMovePacket.PosInfo = movePacket.PosInfo;
 
                 BroadCast(resMovePacket);
             }
         }
 
+        // Skill이 많아지면 skill class를 따로 빼서 player에 넣는 방식으로 구현
         public void HandleSkill(Player player, C_Skill skillPacket)
         {
             if (player == null) return;
@@ -134,7 +135,7 @@ namespace Server.Game
             // 나중에는 job이나 task 방식으로 만들어야함
             lock(_lock)
             {
-                PlayerInfo info = player.Info;
+                ObjectInfo info = player.Info;
                 if (info.PosInfo.State != CreatureState.Idle) return;
 
                 // TODO : 스킬 사용 가능 여부 확인 (ex cooldown)
@@ -143,20 +144,39 @@ namespace Server.Game
                 info.PosInfo.State = CreatureState.Skill;
 
                 S_Skill skill = new S_Skill() { Info = new SkillInfo() };
-                skill.PlayerId = info.PlayerId;
+                skill.PlayerId = info.ObjectId;
                 // skill sheet - json or xml
-                skill.Info.SkillId = 1;
+                // echo 처럼 다시 돌려줌
+                skill.Info.SkillId = skillPacket.Info.SkillId;
                 BroadCast(skill);
 
-                // TODO : 데미지 판정 - 조심해서 짜야함
-                // 만약 client쪽에서 skill을 쓰겠다는 거짓 packet을 1초에 1000개를 보낸다고한다면?
-
-                // Idle로 바뀌어서 들어왔다면 MoveDir이 none일 것이고 player가 서 있는 cellPos를 반환한다.
-                Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
-                Player target = _map.Find(skillPos);
-                if(target != null)
+                if (skillPacket.Info.SkillId == 1) // 주먹질
                 {
-                    Console.WriteLine("Hit Player");
+                    // TODO : 데미지 판정 - 조심해서 짜야함
+                    // 만약 client쪽에서 skill을 쓰겠다는 거짓 packet을 1초에 1000개를 보낸다고한다면?
+                    // Client에서 coroutine을 이용해 cooldown 시간을 설정한다.
+
+                    // Idle로 바뀌어서 들어왔다면 MoveDir이 none일 것이고 player가 서 있는 cellPos를 반환한다.
+                    // 때문에 Dir의 non을 없앰
+                    Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
+                    Player target = _map.Find(skillPos);
+                    if (target != null)
+                    {
+                        Console.WriteLine("Hit Player");
+                    }
+                }
+                else if(skillPacket.Info.SkillId == 2) // 화살
+                {
+                    // 기억은 하지 않지만 새로 생성해준다.
+                    // Arrow는 GameRoom에서 관리되어야하는 object
+                    Arrow arrow = ObjectManager.Instance.Add<Arrow>();
+                    if (arrow == null) return;
+
+                    arrow.Owner = player;
+                    arrow.PosInfo.State = CreatureState.Moving;
+                    arrow.PosInfo.MoveDir = player.PosInfo.MoveDir;
+                    arrow.PosInfo.PosX = player.PosInfo.PosX;
+                    arrow.PosInfo.PosY = player.PosInfo.PosY;
                 }
             }
         }

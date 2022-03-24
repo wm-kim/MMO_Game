@@ -49,10 +49,10 @@ namespace Server
             // DB에서 player 정보를 받아와서 client에 보내주는 작업이 필요
 
             // Player를 만든다.
-            MyPlayer = PlayerManager.Instance.Add();
+            MyPlayer = ObjectManager.Instance.Add<Player>();
             {
                 // 기본값이라 값이 안온것 같을 때는 Client쪽에서도 기본값으로 다시 초기화해준다.
-                MyPlayer.Info.Name = $"Player_{MyPlayer.Info.PlayerId}";
+                MyPlayer.Info.Name = $"Player_{MyPlayer.Info.ObjectId}";
                 MyPlayer.Info.PosInfo.State = CreatureState.Idle;
                 MyPlayer.Info.PosInfo.MoveDir = MoveDir.Down;
                 MyPlayer.Info.PosInfo.PosX = 0;
@@ -68,7 +68,7 @@ namespace Server
         public override void OnDisconnected(EndPoint endPoint)
         {
             // 방에서 자신을 제외시키고 S_LeaveGame S_Despawn 보냄
-            RoomManager.Instance.Find(1).LeaveGame(MyPlayer.Info.PlayerId);
+            RoomManager.Instance.Find(1).LeaveGame(MyPlayer.Info.ObjectId);
 
             SessionManager.Instance.Remove(this);
 

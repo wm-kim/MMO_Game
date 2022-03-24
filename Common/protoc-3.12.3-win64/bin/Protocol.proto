@@ -30,15 +30,23 @@ enum MoveDir {
   RIGHT = 3;
 }
 
+enum GameObjectType {
+	NONE = 0;
+	PLAYER = 1;
+	MONSTER = 2;
+	PROJECTILE = 3;
+}
+
 message S_EnterGame {
-  PlayerInfo player = 1;
+  // 원래 player 정보를 받아주기 위한 것
+  ObjectInfo player = 1;
 }
 
 message S_LeaveGame {
 }
 
 message S_Spawn {
-  repeated PlayerInfo players = 1;
+  repeated ObjectInfo objects = 1;
 }
 
 message S_Despawn {
@@ -53,6 +61,7 @@ message C_Move {
 // Server에서 보낼 떄는 누군지 모름. 따라서 누가 이동할지 id를 넣어줌
 message S_Move {
   int32 playerId = 1;
+  // PositionInfo posInfo = 2;
   PositionInfo posInfo = 2;
 }
 
@@ -65,10 +74,10 @@ message S_Skill {
 	SkillInfo info = 2;
 }
 
-message PlayerInfo {
+message ObjectInfo {
   // ingame id, db에 들어가는 id는 아님
   // Server가 뜰때마다 바뀔 수 있는 식별자
-  int32 playerId = 1;
+  int32 objectId = 1;
   string name = 2;
   PositionInfo posInfo = 3;
 }

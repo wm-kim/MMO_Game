@@ -7,26 +7,47 @@ using System.Threading.Tasks;
 
 namespace Server.Game
 {
-    public class Player
+    public class GameObject
     {
-        public PlayerInfo Info { get; set; } = new PlayerInfo() { PosInfo = new PositionInfo() };
-        // get set할때 lock을 걸어주면 되지 않을까? - 그렇지 않다.
+        public GameObjectType ObjectType { get; protected set; } = GameObjectType.None;
+        public int Id
+        {
+            get { return Info.ObjectId; }
+            set { Info.ObjectId = value; }
+        }
+
+        // GameRoom을 get set할때 lock을 걸어주면 되지 않을까? - 그렇지 않다.
         // get을 하는 순간 참조값을 넘겨주기 때문이다.
         public GameRoom Room { get; set; }
-        public ClientSession Session { get; set; }
+
+        public ObjectInfo Info { get; set; } = new ObjectInfo() { };
+
+        public PositionInfo PosInfo { get; private set; } = new PositionInfo();
+
+        public GameObject()
+        {
+            Info.PosInfo = PosInfo;
+        }
 
         public Vector2Int CellPos
         {
             get
             {
-                return new Vector2Int(Info.PosInfo.PosX, Info.PosInfo.PosY);
+                return new Vector2Int(PosInfo.PosX, PosInfo.PosY);
             }
             set
             {
-                Info.PosInfo.PosX = value.x;
-                Info.PosInfo.PosY = value.y; 
+                PosInfo.PosX = value.x;
+                PosInfo.PosY = value.y;
             }
         }
+
+        // Wrapper : PosInfo의 Dir를 굳이 꺼내와서 넘겨주는것이 번거롭다 
+        public Vector2Int GetFrontCellPos()
+        {
+            return GetFrontCellPos(PosInfo.MoveDir);
+        }
+
 
         public Vector2Int GetFrontCellPos(MoveDir dir)
         {
@@ -34,7 +55,7 @@ namespace Server.Game
             switch (dir)
             {
                 case MoveDir.Up:
-                    cellPos += Vector2Int.up; 
+                    cellPos += Vector2Int.up;
                     break;
                 case MoveDir.Down:
                     cellPos += Vector2Int.down;

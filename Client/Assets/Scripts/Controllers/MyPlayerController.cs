@@ -42,7 +42,7 @@ public class MyPlayerController : PlayerController
         }
 
         // skill 상태로 갈지 확인
-        // 연타시 계속 packet을 보내지 않고 cooldown을 주는게 좋음
+        // 연타시 계속 packet을 보내지 않고 cooldown을 주는게 좋음 
         // 처리하는 방식 - skill 요청 시간을 재는 방법, Coroutine을 이용하는 방법
         if (_coSkillCooltime == null && Input.GetKey(KeyCode.Space))
         {
@@ -52,10 +52,11 @@ public class MyPlayerController : PlayerController
             // 1 punch 2 arrow 
             skill.Info.SkillId = 2; 
             // Server에서 검증 후 S_SkillHandler에서 UseSkill 호출
-            Managers.Network.Send(skill); 
+            Managers.Network.Send(skill);
 
             // State = CreatureState.Skill;
             // 서버쪽의 허락을 받은 후 skill 사용
+            // State는 UseSkill에서 CoStartPunch 코루틴을 실행하여 Skill로 바꿔준다.
 
             // _coSkill = StartCoroutine("CoStartShootArrow");
             _coSkillCooltime = StartCoroutine("CoInputCooltime", 0.2f);
