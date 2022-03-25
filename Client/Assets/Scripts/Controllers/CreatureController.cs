@@ -8,8 +8,26 @@ public class CreatureController : MonoBehaviour
 {
     public int Id { get; set; }
 
-    [SerializeField]
-    public float _speed = 5.0f;
+    StatInfo _stat = new StatInfo();
+    public StatInfo Stat
+    {
+        get { return _stat; }   
+        set
+        {
+            if (_stat.Equals(value))
+                return;
+
+            _stat.Hp = value.Hp;
+            _stat.MaxHp = value.MaxHp;
+            _stat.Speed = value.Speed;
+        }
+    }
+
+    public float Speed
+    {
+        get { return Stat.Speed; }
+        set { Stat.Speed = value; }
+    }
 
     // dirty flag : dir, state, cellpos 셋중하나에 변경사항 추적
     // my player만 check할것이므로 creature controller에 넣는것은 좀 애매하긴하다.
@@ -297,7 +315,7 @@ public class CreatureController : MonoBehaviour
         // 도착 여부 check
         float dist = movDir.magnitude;
         // 도착했다면
-        if (dist < _speed * Time.deltaTime)
+        if (dist < Speed * Time.deltaTime)
         {
             transform.position = destPos;
             // 실질적으로 좌표 이동하는 함수
@@ -314,7 +332,7 @@ public class CreatureController : MonoBehaviour
         else
         {
             // 너무 speed가 빠르면 문제가 될 수 있음
-            transform.position += movDir.normalized * _speed * Time.deltaTime;
+            transform.position += movDir.normalized * Speed * Time.deltaTime;
             State = CreatureState.Moving; // 생략해도 되긴함
         }
     }

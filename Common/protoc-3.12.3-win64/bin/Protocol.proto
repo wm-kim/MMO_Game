@@ -37,6 +37,12 @@ enum GameObjectType {
 	PROJECTILE = 3;
 }
 
+enum SkillType {
+	SKILL_NONE = 0;
+	SKILL_AUTO = 1;
+	SKILL_PROJECTILE = 2;
+}
+
 message S_EnterGame {
   // 원래 player 정보를 받아주기 위한 것
   ObjectInfo player = 1;
@@ -80,6 +86,10 @@ message ObjectInfo {
   int32 objectId = 1;
   string name = 2;
   PositionInfo posInfo = 3;
+  // 화살이나 hp 개념이 없는 object들도 포함하고 있겠지만
+  // 알아서 걸러서 추출
+  // 경우에 따라서 stat을 안보내는 경우도 있다. 남의 stat을 굳이 봐야하나?
+  StatInfo statInfo = 4;
 }
 
 message PositionInfo {
@@ -87,6 +97,12 @@ message PositionInfo {
   MoveDir moveDir = 2;
   int32 posX = 3;
   int32 PosY = 4;
+}
+
+message StatInfo {
+	int32 hp = 1;
+	int32 maxHp = 2;
+	float speed = 3;
 }
 
 message SkillInfo {

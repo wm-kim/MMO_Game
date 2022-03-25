@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf;
 using Google.Protobuf.Protocol;
+using Server.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -102,6 +103,8 @@ namespace Server.Game
             }
         }
 
+        // player가 나갈 때 뿐만 아니라 Object가 despawn할 때
+        // 화살의 경우 update에서 tick 마다 확인해서 갈 수 없다면 이 method 호출
         public void LeaveGame(int objectId)
         {
             GameObjectType type = ObjectManager.GetObjectTypeById(objectId);
@@ -207,39 +210,52 @@ namespace Server.Game
                 skill.ObjectId = info.ObjectId;
                 // skill sheet - json or xml
                 // echo 처럼 다시 돌려줌
-                skill.Info.SkillId = skillPacket.Info.SkillId;
+                skill.Info.SkillId = skillPacket.Info.SkillId;  
                 BroadCast(skill);
 
-                if (skillPacket.Info.SkillId == 1) // 주먹질
+                Data.Skill skillData = null;
+                if (DataManager.SkillDict.TryGetValue(skillPacket.Info.SkillId, out skillData) == false) return;
+
+                switch(skillData.skillType)
                 {
-                    // TODO : 데미지 판정 - 조심해서 짜야함
-                    // 만약 client쪽에서 skill을 쓰겠다는 거짓 packet을 1초에 1000개를 보낸다고한다면?
-                    // Client에서 coroutine을 이용해 cooldown 시간을 설정한다.
+                    case SkillType.SkillAuto:
+                        {
+                            // TODO : 데미지 판정 - 조심해서 짜야함
+                            // 만약 client쪽에서 skill을 쓰겠다는 거짓 packet을 1초에 1000개를 보낸다고한다면?
+                            // Client에서 coroutine을 이용해 cooldown 시간을 설정한다.
 
-                    // Idle로 바뀌어서 들어왔다면 MoveDir이 none일 것이고 player가 서 있는 cellPos를 반환한다.
-                    // 때문에 Dir의 non을 없앰
-                    Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
-                    GameObject target = Map.Find(skillPos);
-                    if (target != null)
-                    {
-                        Console.WriteLine("Hit GameObject");
-                    }
-                }
-                else if(skillPacket.Info.SkillId == 2) // 화살
-                {
-                    // 기억은 하지 않지만 새로 생성해준다.
-                    // Arrow는 GameRoom에서 관리되어야하는 object
-                    Arrow arrow = ObjectManager.Instance.Add<Arrow>();
-                    if (arrow == null) return;
+                            // Idle로 바뀌어서 들어왔다면 MoveDir이 none일 것이고 player가 서 있는 cellPos를 반환한다.
+                            // 때문에 Dir의 non을 없앰
+                            Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
+                            GameObject target = Map.Find(skillPos);
+                            if (target != null)
+                            {
+                                Console.WriteLine("Hit GameObject");
+                            }
+                        }
+                        break;
+                    case SkillType.SkillProjectile:
+                        {
+                            // 투사체가 화살 말고도 있다면 어떤 projectile인지 구분할 수 있는 정보도 있어야하겠다.
 
-                    arrow.Owner = player;
-                    arrow.PosInfo.State = CreatureState.Moving;
-                    arrow.PosInfo.MoveDir = player.PosInfo.MoveDir;
-                    arrow.PosInfo.PosX = player.PosInfo.PosX;
-                    arrow.PosInfo.PosY = player.PosInfo.PosY;
+                            // 기억은 하지 않지만 새로 생성해준다.
+                            // Arrow는 GameRoom에서 관리되어야하는 object
+                            Arrow arrow = ObjectManager.Instance.Add<Arrow>();
+                            if (arrow == null) return;
 
-                    // GameRooom에서 기억후 Spawn 패킷 쏴줌
-                    EnterGame(arrow);
+                            arrow.Owner = player;
+                            arrow.Data = skillData;
+                            arrow.PosInfo.State = CreatureState.Moving;
+                            arrow.PosInfo.MoveDir = player.PosInfo.MoveDir;
+                            arrow.PosInfo.PosX = player.PosInfo.PosX;
+                            arrow.PosInfo.PosY = player.PosInfo.PosY;
+                            // Projectile의 speed 정보를 StatInfo에도 넘겨줌
+                            arrow.Speed = skillData.projectile.speed;
+
+                            // GameRooom에서 기억후 Spawn 패킷 쏴줌
+                            EnterGame(arrow);
+                        }
+                        break;
                 }
             }
         }

@@ -9,6 +9,7 @@ using ServerCore;
 using Google.Protobuf;
 using Google.Protobuf.Protocol;
 using Server.Game;
+using Server.Data;
 
 namespace Server
 {
@@ -25,6 +26,11 @@ namespace Server
 
         static void Main(string[] args)
         {
+            ConfigManager.LoadConfig();
+            DataManager.LoadData();
+
+            var d = DataManager.StatDict;
+
             // 1번방 생성, 나중에는 데이터로 빼서 시작지역을 정해줌.
             // 지금은 1번방만 사용할 것이다.
             RoomManager.Instance.Add(1);
@@ -52,7 +58,7 @@ namespace Server
                 // JobTimer.Instance.Flush();
 
                 RoomManager.Instance.Find(1).Update();
-                Thread.Sleep(100);
+                // Thread.Sleep(100);
             }
         }
     }

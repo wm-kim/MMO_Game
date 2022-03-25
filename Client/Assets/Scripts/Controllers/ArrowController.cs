@@ -23,11 +23,10 @@ public class ArrowController : CreatureController
             case MoveDir.Right:
                 transform.rotation = Quaternion.Euler(0, 0, -90);
                 break;
-
         }
 
         State = CreatureState.Moving;
-        _speed = 15.0f;
+        // _speed = 15.0f; Server쪽에서 이제 받아옴
 
         base.Init();
     }

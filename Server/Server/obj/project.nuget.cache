@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "zSVWrS0FC+kNpPnJ/Fd1NlkShgbc0l5b4F1i8ETPUwINRsk6xqHeQSqUZoGCXIuIb7JqYoBbZfPFz//QVO4lvA==",
+  "dgSpecHash": "+33ZbfR5c8lrWR89+XG9kTapKBjoS5COru8u7NbdblCcuct/lACndAZ1uDw+WQVyZgalm38B+D31BR2v+2kfyA==",
   "success": true,
   "projectFilePath": "C:\\Users\\user\\Desktop\\unity study\\MMO_Game\\Server\\Server\\Server.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.19.4\\google.protobuf.3.19.4.nupkg.sha512"
+    "C:\\Users\\user\\.nuget\\packages\\google.protobuf\\3.19.4\\google.protobuf.3.19.4.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
   ],
   "logs": []
 }

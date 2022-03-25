@@ -14,6 +14,13 @@ namespace Server.Game
         public Player()
         {
             ObjectType = GameObjectType.Player;
+            Speed = 20.0f;
+        }
+
+        // player도 pvp가 된다고 가정
+        public override void OnDamaged(GameObject attacker, int damage)
+        {
+            Console.WriteLine($"TODO : damage {damage}");
         }
     }
 }

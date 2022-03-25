@@ -115,6 +115,10 @@ public class PlayerController : CreatureController
         {
             _coSkill = StartCoroutine("CoStartPunch");
         }
+        else if (skillId == 2)
+        {
+            _coSkill = StartCoroutine("CoStartShootArrow");
+        }
     }
 
     protected virtual void CheckUpdatedFlag() { }
@@ -143,18 +147,15 @@ public class PlayerController : CreatureController
 
     IEnumerator CoStartShootArrow()
     {
-        GameObject go = Managers.Resource.Instantiate("Creature/Arrow");
-        // ArrowController Init에서 moving state로 설정해줌
-        ArrowController ac = go.GetComponent<ArrowController>();
-        // 키보드를 안누른 상태라고 해도 이전의 마지막으로 바라보고 있던 상태로 진행
-        ac.Dir = Dir;
-        ac.CellPos = CellPos;
-
         // 대기 시간
         _rangeSkill = true;
+        State = CreatureState.Skill;
         yield return new WaitForSeconds(0.3f);
         State = CreatureState.Idle;
         _coSkill = null;
+        CheckUpdatedFlag();
+        // Server 쪽에서도 Cooltime이 끝났으면 idle 상태로 되돌리는 것을 해야한다.
+        // 지금은 CheckUpdatedFlag로 임시처리
     }
 
     public override void OnDamage()

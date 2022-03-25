@@ -14,15 +14,21 @@ namespace Server.Game
 
         long _nextMoveTick = 0;
 
-        // 무조건 GameRoom의 tick을 따라갈 필요는 없겠다.
+
+        // -> GameRoom update -> main thread 
+        // 무조건 GameRoom의 tick을 따라갈 필요는 없다,
         public override void Update()
         {
             // TODO
-            if (Owner == null || Room == null) return;
+            // Data는 상위 class인 Projectile이 가지고 기술에 대한 있는 정보
+            if (Data == null || Data.projectile == null || Owner == null || Room == null) return;
 
             if (_nextMoveTick >= Environment.TickCount64) return;
 
-            _nextMoveTick = Environment.TickCount64 + 50;
+            // speed는 1초에 움직일 수 있는 칸의 개수 1초 = 1000ms
+            // 서버 쪽에서 움직이는 시간은 데이터를 기반으로 움직임
+            long tick = (long)(1000 / Data.projectile.speed);
+            _nextMoveTick = Environment.TickCount64 + tick;
 
             // 앞으로 이동하는 연산
             Vector2Int destPos = GetFrontCellPos();
@@ -37,12 +43,15 @@ namespace Server.Game
 
                 Console.WriteLine("move arrow");
             }
-            else 
+            else // 갈 수 없다면
             {
                 GameObject target = Room.Map.Find(destPos);
                 if(target != null)
                 {
                     // TODO 피격 판정
+                    // OnDamaged에서 Owner를 찾아도 되고, 아니면 owner를 직접넘겨줘도 됨
+                    target.OnDamaged(this, Data.damage);
+                    Console.WriteLine($"damage : {Data.damage}");
                 }
 
                 // 소멸, type 추출후, 기억에서 삭제 한다음, despawn packet 보냄
