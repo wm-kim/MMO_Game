@@ -46,11 +46,11 @@ public class MyPlayerController : PlayerController
         // 처리하는 방식 - skill 요청 시간을 재는 방법, Coroutine을 이용하는 방법
         if (_coSkillCooltime == null && Input.GetKey(KeyCode.Space))
         {
-            Debug.Log("SKill !");
+            Debug.Log("SKill!");
 
             C_Skill skill = new C_Skill { Info = new SkillInfo() }; 
             // 1 punch 2 arrow 
-            skill.Info.SkillId = 2; 
+            skill.Info.SkillId = 2;
             // Server에서 검증 후 S_SkillHandler에서 UseSkill 호출
             Managers.Network.Send(skill);
 

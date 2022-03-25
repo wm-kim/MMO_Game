@@ -32,56 +32,59 @@ public class ArrowController : CreatureController
         base.Init();
     }
 
+    
     protected override void UpdateAnimation() { }
+
+    // 이제 화살은 Server에서 관리한다.
 
     // state가 idle인 상태에서 UpdateController에서 호출 (update)
     // PlayerController의 경우 input을 받지 않으면
     // GetDirInput에서 dir이 자동으로 none이 되지만 여기서는 그렇지 않음
     // UpdateIdle -> MoveToNextPos
-    protected override void MoveToNextPos()
-    {
-        // 여기서 _dir != MoveDir.None 확인해도 달라지는건 없음
+    //protected override void MoveToNextPos()
+    //{
+    //    // 여기서 _dir != MoveDir.None 확인해도 달라지는건 없음
         
-        Vector3Int destPos = CellPos;
-        switch (Dir)
-        {
-            case MoveDir.Up:
-                destPos += Vector3Int.up;
-                break;
-            case MoveDir.Down:
-                destPos += Vector3Int.down;
-                break;
-            case MoveDir.Left:
-                destPos += Vector3Int.left;
-                break;
-            case MoveDir.Right:
-                destPos += Vector3Int.right;
-                break;
-        }
+    //    Vector3Int destPos = CellPos;
+    //    switch (Dir)
+    //    {
+    //        case MoveDir.Up:
+    //            destPos += Vector3Int.up;
+    //            break;
+    //        case MoveDir.Down:
+    //            destPos += Vector3Int.down;
+    //            break;
+    //        case MoveDir.Left:
+    //            destPos += Vector3Int.left;
+    //            break;
+    //        case MoveDir.Right:
+    //            destPos += Vector3Int.right;
+    //            break;
+    //    }
 
-        State = CreatureState.Moving; // 자동으로 UpdateMoving() 호출
-        // 이제 이부분도 굳이 안넣어줘도 됨
-        // UpdateController base에서 UpdateIdle호출해서 이동상태로 넘어갈 것
+    //    State = CreatureState.Moving; // 자동으로 UpdateMoving() 호출
+    //    // 이제 이부분도 굳이 안넣어줘도 됨
+    //    // UpdateController base에서 UpdateIdle호출해서 이동상태로 넘어갈 것
 
-        if (Managers.Map.CanGo(destPos))
-        {
-            GameObject go = Managers.Object.Find(destPos);
-            if (go == null)
-            {
-                CellPos = destPos;
-            }
-            else 
-            {
-                // 갈 수 있긴한데 화살의 피격 판정 object(monster)와 충돌
-                CreatureController cc = go.GetComponent<CreatureController>();
-                if (cc != null) cc.OnDamage();
+    //    if (Managers.Map.CanGo(destPos))
+    //    {
+    //        GameObject go = Managers.Object.Find(destPos);
+    //        if (go == null)
+    //        {
+    //            CellPos = destPos;
+    //        }
+    //        else 
+    //        {
+    //            // 갈 수 있긴한데 화살의 피격 판정 object(monster)와 충돌
+    //            CreatureController cc = go.GetComponent<CreatureController>();
+    //            if (cc != null) cc.OnDamage();
 
-                Managers.Resource.Destroy(gameObject);
-            }
-        }
-        else
-        {
-            Managers.Resource.Destroy(gameObject);
-        }
-    } 
+    //            Managers.Resource.Destroy(gameObject);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        Managers.Resource.Destroy(gameObject);
+    //    }
+    //} 
 }

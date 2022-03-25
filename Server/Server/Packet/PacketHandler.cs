@@ -32,6 +32,7 @@ class PacketHandler
 		room.HandleMove(player, movePacket);
 	}
 
+	// 
 	public static void C_SkillHandler(PacketSession session, IMessage packet)
     {
 		C_Skill skillPacket = packet as C_Skill;
@@ -43,6 +44,7 @@ class PacketHandler
 		GameRoom room = player.Room;
 		if (room == null) return;
 
+		// skill id에 따라 처리
 		room.HandleSkill(player, skillPacket);
 	}
 }

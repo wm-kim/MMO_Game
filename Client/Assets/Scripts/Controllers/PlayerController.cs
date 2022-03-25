@@ -10,6 +10,7 @@ public class PlayerController : CreatureController
     protected Coroutine _coSkill;
     // skill이 많아지면 어떤 skill의 어떤 animation을 틀지는
     // skill관련된 datasheet를 빼서 관리 PlayerController로부터 분리
+    // 어떤 animation을 재생해야하는지에 대한 boolean
     protected bool _rangeSkill = false;
 
     // start update 없어도 creature에 있는 start update가 자동 호출
@@ -127,12 +128,13 @@ public class PlayerController : CreatureController
         //    CreatureController cc = go.GetComponent<CreatureController>();
         //    if (cc != null) cc.OnDamage();
         //}
-
+        Debug.Log("Skill State");
         // 대기 시간
         _rangeSkill = false;
         State = CreatureState.Skill;
         yield return new WaitForSeconds(0.5f);
         // 0.5초마다 idle 상태로 돌아감
+        Debug.Log("Idle State");
         State = CreatureState.Idle;
         _coSkill = null;
         // C_Move packet 전송, Server쪽에 idle 상태로 돌아가라고 알려줌

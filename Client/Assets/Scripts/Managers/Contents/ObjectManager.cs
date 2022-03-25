@@ -8,37 +8,68 @@ public class ObjectManager
 {
     public MyPlayerController MyPlayer { get; set; }
     // Server List에서 Dictionary로 바꿈
-    Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();  
+    Dictionary<int, GameObject> _objects = new Dictionary<int, GameObject>();
+
+    // id에서 type 추출
+    public static GameObjectType GetObjectTypeById(int id)
+    {
+        int type = (id >> 24) & 0x7F;
+        return (GameObjectType)type;
+    }
 
     // 내부에서 만들어주는 factory pattern
-    public void Add(PlayerInfo info, bool myPlayer = false)
+    // 이제 player만 만들어주는것이 아니라 화살 monster 등등 만들어줄 것이다.
+    public void Add(ObjectInfo info, bool myPlayer = false)
     {
-        if(myPlayer)
-        {
-            GameObject go = Managers.Resource.Instantiate("Creature/MyPlayer");
-            go.name = info.Name;
-            _objects.Add(info.PlayerId, go);
+        GameObjectType objectType = GetObjectTypeById(info.ObjectId);
 
-            // Player를 만들자 마자 setting하고 있는데 Init을 해야 animator와 sprite가 있다.
-            MyPlayer = go.GetComponent<MyPlayerController>();
-            MyPlayer.Id = info.PlayerId;
-            MyPlayer.PosInfo = info.PosInfo;
-            // cellpos에 따라 transform을 맞추어 주는것이 필요
-            MyPlayer.SyncPos();
+        if(objectType == GameObjectType.Player)
+        {
+            if (myPlayer)
+            {
+                GameObject go = Managers.Resource.Instantiate("Creature/MyPlayer");
+                go.name = info.Name;
+                _objects.Add(info.ObjectId, go);
+
+                // Player를 만들자 마자 setting하고 있는데 Init을 해야 animator와 sprite가 있다.
+                MyPlayer = go.GetComponent<MyPlayerController>();
+                MyPlayer.Id = info.ObjectId;
+                MyPlayer.PosInfo = info.PosInfo;
+                // cellpos에 따라 transform을 맞추어 주는것이 필요
+                MyPlayer.SyncPos();
+            }
+            else
+            {
+                GameObject go = Managers.Resource.Instantiate("Creature/Player");
+                go.name = info.Name;
+                _objects.Add(info.ObjectId, go);
+
+                PlayerController pc = go.GetComponent<PlayerController>();
+                pc.Id = info.ObjectId;
+                pc.PosInfo = info.PosInfo;
+                // cellpos에 따라 transform을 맞추어 주는것이 필요
+                pc.SyncPos();
+            }
         }
-        else
+        else if (objectType == GameObjectType.Monster)
         {
-            GameObject go = Managers.Resource.Instantiate("Creature/Player");
-            go.name = info.Name;
-            _objects.Add(info.PlayerId, go);
 
-            PlayerController pc = go.GetComponent<PlayerController>();
-            pc.Id = info.PlayerId;
-            pc.PosInfo = info.PosInfo;
-            // cellpos에 따라 transform을 맞추어 주는것이 필요
-            pc.SyncPos();
+        }
+        // 지금은 projectile 화살 하나밖에 없다.
+        else if(objectType == GameObjectType.Projectile)
+        {
+            // 생성 및 방향 설정
+            GameObject go = Managers.Resource.Instantiate("Creature/Arrow");
+            go.name = "Arrow";
+            _objects.Add(info.ObjectId, go);
+
+            ArrowController ac = go.GetComponent<ArrowController>();
+            ac.Dir = info.PosInfo.MoveDir;
+            ac.CellPos = new Vector3Int(info.PosInfo.PosX, info.PosInfo.PosY, 0);
+            ac.SyncPos();
         }
     }
+
     public void Remove(int id) 
     {
         GameObject go = FindById(id);

@@ -66,7 +66,7 @@ namespace Server.Game
 		public int SizeY { get { return MaxY - MinY + 1; } }
 
 		bool[,] _collision;
-		Player[,] _players; // setting이 ApplyMove에서만 일어난다. 때문에 입장했을떄는 update안됨
+		GameObject[,] _objects; // setting이 ApplyMove에서만 일어난다. 때문에 입장했을떄는 update안됨
 
 		// destpos가 넘어옴
 		public bool CanGo(Vector2Int cellPos, bool checkObjects = true)
@@ -78,38 +78,49 @@ namespace Server.Game
 
 			int x = cellPos.x - MinX;
 			int y = MaxY - cellPos.y; // 위쪽으로 갈수록 y가 높아짐
-			return !_collision[y, x] && (!checkObjects || _players[y, x] == null);
+			return !_collision[y, x] && (!checkObjects || _objects[y, x] == null);
 		}
 
-		public Player Find(Vector2Int cellPos)
+		public GameObject Find(Vector2Int cellPos)
         {
 			if (cellPos.x < MinX || cellPos.x > MaxX) return null;
 			if (cellPos.y < MinY || cellPos.y > MaxY) return null;
 
 			int x = cellPos.x - MinX;
 			int y = MaxY - cellPos.y;
-			return _players[y, x];
+			return _objects[y, x];
+		}
+
+		
+		public bool ApplyLeave(GameObject gameObject)
+        {
+			PositionInfo posinfo = gameObject.PosInfo;
+			if (posinfo.PosX < MinX || posinfo.PosX > MaxX) return false;
+			if (posinfo.PosY < MinY || posinfo.PosX > MaxY) return false;
+
+			{
+				int x = posinfo.PosX - MinX;
+				int y = MaxY - posinfo.PosY;
+				// 현재 logic 상에 문제는 없지만 그래도 일단 check
+				if (_objects[y, x] == gameObject) _objects[y, x] = null;
+			}
+
+			return true;
 		}
 
 		// C_MoveHandler -> handleMove에서 호출. 이동 여부에 따라 _players 정보 변경
-		public bool ApplyMove(Player player, Vector2Int dest)
+		public bool ApplyMove(GameObject gameObject, Vector2Int dest)
         {
-			PositionInfo posinfo = player.Info.PosInfo;
-			if (posinfo.PosX < MinX || posinfo.PosX > MaxX) return false;
-			if (posinfo.PosY < MinY || posinfo.PosX > MaxY) return false;
+			ApplyLeave(gameObject);
+
+			PositionInfo posinfo = gameObject.PosInfo;
 			if (CanGo(dest, true) == false)
 				return false;
 
             {
-				int x = posinfo.PosX - MinX;
-				int y = MaxY - posinfo.PosY;
-				// 현재 logic 상에 문제는 없지만 그래도 일단 check
-				if (_players[y, x] == player) _players[y, x] = null;
-            }
-            {
 				int x = dest.x - MinX; 
 				int y = MaxY - dest.y;
-				_players[y, x] = player;
+				_objects[y, x] = gameObject;
 			}
 
 			// 실제로 좌표를 이동
@@ -136,7 +147,7 @@ namespace Server.Game
 			int xCount = MaxX - MinX + 1;
 			int yCount = MaxY - MinY + 1;
 			_collision = new bool[yCount, xCount];
-			_players = new Player[yCount, xCount];
+			_objects = new Player[yCount, xCount];
 
 			for (int y = 0; y < yCount; y++)
 			{

@@ -301,6 +301,7 @@ public class CreatureController : MonoBehaviour
         {
             transform.position = destPos;
             // 실질적으로 좌표 이동하는 함수
+            // 아무 입력을 받지 않을 경우 _moveKeyPressed는 false로 Idle state로 바꿔준 후 C_Move를 쏴준다.
             MoveToNextPos();
 
             // 예외적으로 animation을 직접 control

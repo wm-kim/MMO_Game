@@ -50,7 +50,7 @@ message S_Spawn {
 }
 
 message S_Despawn {
-  repeated int32 playerIds = 1;
+  repeated int32 objectIds = 1;
 }
 
 message C_Move {
@@ -60,7 +60,7 @@ message C_Move {
 // C_Move는 어떤 ClientSession인지 알지만 
 // Server에서 보낼 떄는 누군지 모름. 따라서 누가 이동할지 id를 넣어줌
 message S_Move {
-  int32 playerId = 1;
+  int32 objectId = 1;
   // PositionInfo posInfo = 2;
   PositionInfo posInfo = 2;
 }
@@ -70,7 +70,7 @@ message C_Skill {
 }
 
 message S_Skill {
-	int32 playerId = 1;
+	int32 objectId = 1;
 	SkillInfo info = 2;
 }
 

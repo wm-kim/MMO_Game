@@ -42,13 +42,17 @@ namespace Server
             Console.WriteLine("Listening...");
 
             //FlushRoom(); // 예약
-            JobTimer.Instance.Push(FlushRoom);
+            // JobTimer.Instance.Push(FlushRoom);
             // 다른 thread에서 JobTimer라는 중앙관리 시스템에 일감을 던져서 예약하게될것
 
+            // TODO
             while(true)
             {
                 // 예약된거 처리
-                JobTimer.Instance.Flush();
+                // JobTimer.Instance.Flush();
+
+                RoomManager.Instance.Find(1).Update();
+                Thread.Sleep(100);
             }
         }
     }

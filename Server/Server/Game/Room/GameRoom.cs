@@ -17,75 +17,135 @@ namespace Server.Game
         // Dictinary를 이용해 id로 player를 빠르게 찾을 수 있게 함, Grid 단위로 player를 들고 있게 해도됨
         // playerId는 PlayerManager에서 발급
         Dictionary<int, Player> _players = new Dictionary<int, Player>();
+        Dictionary<int, Monster> _monsters = new Dictionary<int, Monster>();
+        Dictionary<int, Projectile> _projectiles = new Dictionary<int, Projectile>();
+        // type 별로 dictionary를 들고 있을 수도 있고 하나의 dictionary로 관리할 수 도 있다. (장단점이 있음)
+
+
         // 내가 소속되어있는 map, 좌표를 기준으로 player가 있는지 없는지 찾고 싶음 -> map 안에서 관리
-        Map _map = new Map();
+        public Map Map { get; private set; } = new Map();
+
         
         public void Init(int mapId)
-        {   
+        {
             // mapId에 따른 경로도 나중에 공식화해서 지정이 될 것
-            _map.LoadMap(mapId, "../../../../../Common/Mapdata");
+            Map.LoadMap(mapId, "../../../../../Common/Mapdata");
+        }
+
+        // GameRoom을 몇 tick 단위로 업데이트 할 
+        public void Update()
+        {
+            lock (_lock)
+            {
+                foreach (Projectile projectile in _projectiles.Values)
+                {
+                    projectile.Update();
+                }
+            }
         }
 
         // 인자로 접속한 player의 정보 전달
-        public void EnterGame(Player newPlayer)
+        // 이제는 중의적으로 Object 입장. arrow나 monster...
+        public void EnterGame(GameObject gameObject)
         {
-            if (newPlayer == null) return;
+            if (gameObject == null) return;
+
+            GameObjectType type = ObjectManager.GetObjectTypeById(gameObject.Id);
 
             lock(_lock)
             {
-                _players.Add(newPlayer.Info.ObjectId, newPlayer);
-                newPlayer.Room = this;
-
-                // 본인한테 정보 전송
+                if(type == GameObjectType.Player)
                 {
-                    S_EnterGame enterPacket = new S_EnterGame();
-                    enterPacket.Player = newPlayer.Info;
-                    newPlayer.Session.Send(enterPacket);
+                    Player player = gameObject as Player;
 
-                    // 나한테 나머지 player에 대한 정보를 보내줌
-                    S_Spawn spawnPacket = new S_Spawn();
-                    foreach(Player p in _players.Values)
+                    _players.Add(gameObject.Id, player);
+                    player.Room = this;
+
+                    // 본인한테 정보 전송
                     {
-                        if (newPlayer != p) spawnPacket.Objects.Add(p.Info);
+                        S_EnterGame enterPacket = new S_EnterGame();
+                        enterPacket.Player = player.Info;
+                        player.Session.Send(enterPacket);
+
+                        // 나한테 나머지 player에 대한 정보를 보내줌
+                        S_Spawn spawnPacket = new S_Spawn();
+                        foreach (Player p in _players.Values)
+                        {
+                            if (player != p) spawnPacket.Objects.Add(p.Info);
+                        }
+                        player.Session.Send(spawnPacket);
+                        // 지금은 contents code와 network로 보내는 코드 같이 묶여있음
                     }
-                    newPlayer.Session.Send(spawnPacket);
-                    // 지금은 contents code와 network로 보내는 코드 같이 묶여있음
+                }
+                else if (type == GameObjectType.Monster)
+                {
+                    Monster monster = gameObject as Monster;
+                    _monsters.Add(gameObject.Id, monster);
+                    monster.Room = this;
+                }
+                else if(type == GameObjectType.Projectile)
+                {
+                    Projectile projectile = gameObject as Projectile;
+                    _projectiles.Add(gameObject.Id, projectile);
+                    projectile.Room = this;
                 }
                 // 타인한테 정보 전송
                 {
                     S_Spawn spawnPacket = new S_Spawn();
-                    spawnPacket.Objects.Add(newPlayer.Info);
+                    spawnPacket.Objects.Add(gameObject.Info);
                     foreach (Player p in _players.Values)
                     {
-                        if (newPlayer != p) p.Session.Send(spawnPacket);
+                        // 본인의 정보는 S_EnterGame에서 받기 때문
+                        if (p.Id != gameObject.Id) p.Session.Send(spawnPacket);
                     }
                 }
             }
         }
 
-        public void LeaveGame(int playerId)
+        public void LeaveGame(int objectId)
         {
+            GameObjectType type = ObjectManager.GetObjectTypeById(objectId);
+
             lock (_lock)
             {
-                Player player = null;
-                if (_players.Remove(playerId, out player) == false)
-                    return; 
-
-                player.Room = null;
-
-                // 본인한테 정보 전송
+                if(type == GameObjectType.Player)
                 {
-                    S_LeaveGame leavePacket = new S_LeaveGame();
-                    player.Session.Send(leavePacket);
+                    Player player = null;
+                    if (_players.Remove(objectId, out player) == false)
+                        return;
+
+                    player.Room = null;
+                    Map.ApplyLeave(player);
+
+                    // 본인한테 정보 전송
+                    {
+                        S_LeaveGame leavePacket = new S_LeaveGame();
+                        player.Session.Send(leavePacket);
+                    }
+                }
+                else if (type == GameObjectType.Monster)
+                {
+                    Monster monster = null;
+                    if (_monsters.Remove(objectId, out monster) == false) return;
+                    monster.Room = null;
+                    Map.ApplyLeave(monster);
+                }
+                else if (type == GameObjectType.Projectile)
+                {
+                    Projectile projectile = null;
+                    if (_projectiles.Remove(objectId, out projectile) == false) return;
+                    projectile.Room = null;
+                    // 화살은 충돌 대상이 아니기 때문에 _map.ApplyLeave 하지 않아도됨
                 }
 
-                // 타인에게 정보 전송
+
+                // 타인에게 정보 전송, 물체 사라졌다고 알리는 부분
                 {
                     S_Despawn despawnPacket = new S_Despawn();
-                    despawnPacket.PlayerIds.Add(player.Info.ObjectId);
+                    despawnPacket.ObjectIds.Add(objectId);
                     foreach(Player p in _players.Values)
                     {
-                        if(player != p) p.Session.Send(despawnPacket);
+                        if(p.Id != objectId) p.Session.Send(despawnPacket);
                     }
                 }
             }
@@ -106,7 +166,7 @@ namespace Server.Game
                 // 좌표는 이동안했는데 상태가 idle로 변경할 때도 사용하기 때문에 그럴때는 통과시켜줘야함
                 if (movePosInfo.PosX != info.PosInfo.PosX || movePosInfo.PosY != info.PosInfo.PosY)
                 {
-                    if (_map.CanGo(new Vector2Int(movePosInfo.PosX, movePosInfo.PosY)) == false)
+                    if (Map.CanGo(new Vector2Int(movePosInfo.PosX, movePosInfo.PosY)) == false)
                         return;
                 }
 
@@ -115,11 +175,11 @@ namespace Server.Game
                 info.PosInfo.MoveDir = movePosInfo.MoveDir;
                 // 좌표 이동하는 부분이 gameRoom에서가 아니라 map에서 하는 이유, player 2차배열 변경을 위해서
                 // 왜 ApplyMove안에서는 lock을 사용하지 않는가? - 상위단계인 gameRoom에서 이미 lock을 잡고 있으므로
-                _map.ApplyMove(player, new Vector2Int(movePosInfo.PosX, movePosInfo.PosY));
+                Map.ApplyMove(player, new Vector2Int(movePosInfo.PosX, movePosInfo.PosY));
 
                 // 다른 플레이어한테도 알려준다.
                 S_Move resMovePacket = new S_Move();
-                resMovePacket.PlayerId = player.Info.ObjectId;
+                resMovePacket.ObjectId = player.Info.ObjectId;
                 resMovePacket.PosInfo = movePacket.PosInfo;
 
                 BroadCast(resMovePacket);
@@ -144,7 +204,7 @@ namespace Server.Game
                 info.PosInfo.State = CreatureState.Skill;
 
                 S_Skill skill = new S_Skill() { Info = new SkillInfo() };
-                skill.PlayerId = info.ObjectId;
+                skill.ObjectId = info.ObjectId;
                 // skill sheet - json or xml
                 // echo 처럼 다시 돌려줌
                 skill.Info.SkillId = skillPacket.Info.SkillId;
@@ -159,10 +219,10 @@ namespace Server.Game
                     // Idle로 바뀌어서 들어왔다면 MoveDir이 none일 것이고 player가 서 있는 cellPos를 반환한다.
                     // 때문에 Dir의 non을 없앰
                     Vector2Int skillPos = player.GetFrontCellPos(info.PosInfo.MoveDir);
-                    Player target = _map.Find(skillPos);
+                    GameObject target = Map.Find(skillPos);
                     if (target != null)
                     {
-                        Console.WriteLine("Hit Player");
+                        Console.WriteLine("Hit GameObject");
                     }
                 }
                 else if(skillPacket.Info.SkillId == 2) // 화살
@@ -177,6 +237,9 @@ namespace Server.Game
                     arrow.PosInfo.MoveDir = player.PosInfo.MoveDir;
                     arrow.PosInfo.PosX = player.PosInfo.PosX;
                     arrow.PosInfo.PosY = player.PosInfo.PosY;
+
+                    // GameRooom에서 기억후 Spawn 패킷 쏴줌
+                    EnterGame(arrow);
                 }
             }
         }
