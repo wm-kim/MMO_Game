@@ -3,14 +3,11 @@ using ServerCore;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Server.Game
 {
-	// 각각의 GameRoom마다 map을 하나씩 들고 있게끔할 것이다.
-	public struct Pos // left bottom 기준
+	public struct Pos
 	{
 		public Pos(int y, int x) { Y = y; X = x; }
 		public int Y;
@@ -18,7 +15,7 @@ namespace Server.Game
 	}
 
 	public struct PQNode : IComparable<PQNode>
-	{   // F = G + H
+	{
 		public int F;
 		public int G;
 		public int Y;
@@ -33,28 +30,33 @@ namespace Server.Game
 	}
 
 	public struct Vector2Int
-    {
+	{
 		public int x;
 		public int y;
-        public Vector2Int(int x, int y) 
-        {
-			this.x = x;
-			this.y = y;
-        }
+
+		public Vector2Int(int x, int y) { this.x = x; this.y = y; }
 
 		public static Vector2Int up { get { return new Vector2Int(0, 1); } }
 		public static Vector2Int down { get { return new Vector2Int(0, -1); } }
 		public static Vector2Int left { get { return new Vector2Int(-1, 0); } }
 		public static Vector2Int right { get { return new Vector2Int(1, 0); } }
 
-		public static Vector2Int operator+(Vector2Int a, Vector2Int b)
-        {
+		public static Vector2Int operator +(Vector2Int a, Vector2Int b)
+		{
 			return new Vector2Int(a.x + b.x, a.y + b.y);
-        }
+		}
 
-    }
+		public static Vector2Int operator -(Vector2Int a, Vector2Int b)
+		{
+			return new Vector2Int(a.x - b.x, a.y - b.y);
+		}
 
-	// map load 삭제 역할, load가 되었으면 collision file 추출
+		public float magnitude { get { return (float)Math.Sqrt(sqrMagnitude); } }
+		public int sqrMagnitude { get { return (x * x + y * y); } }
+		public int cellDistFromZero { get { return Math.Abs(x) + Math.Abs(y); } }
+	}
+
+	// map load, 삭제 역할, load가 되었으면 collision file 추출
 	public class Map
 	{
 		public int MinX { get; set; }
@@ -66,7 +68,7 @@ namespace Server.Game
 		public int SizeY { get { return MaxY - MinY + 1; } }
 
 		bool[,] _collision;
-		GameObject[,] _objects; // setting이 ApplyMove에서만 일어난다. 때문에 입장했을떄는 update안됨
+		GameObject[,] _objects;
 
 		// destpos가 넘어옴
 		public bool CanGo(Vector2Int cellPos, bool checkObjects = true)
@@ -83,42 +85,45 @@ namespace Server.Game
 
 		public GameObject Find(Vector2Int cellPos)
         {
-			if (cellPos.x < MinX || cellPos.x > MaxX) return null;
-			if (cellPos.y < MinY || cellPos.y > MaxY) return null;
+			if (cellPos.x < MinX || cellPos.x >= MaxX) return null;
+			if (cellPos.y < MinY || cellPos.y >= MaxY) return null;
 
 			int x = cellPos.x - MinX;
 			int y = MaxY - cellPos.y;
 			return _objects[y, x];
 		}
 
-		
+
 		public bool ApplyLeave(GameObject gameObject)
         {
-			PositionInfo posinfo = gameObject.PosInfo;
-			if (posinfo.PosX < MinX || posinfo.PosX > MaxX) return false;
-			if (posinfo.PosY < MinY || posinfo.PosX > MaxY) return false;
+			PositionInfo posInfo = gameObject.PosInfo;
+			if (posInfo.PosX < MinX || posInfo.PosX >= MaxX)
+				return false;
+			if (posInfo.PosY < MinY || posInfo.PosY >= MaxY)
+				return false;
 
 			{
-				int x = posinfo.PosX - MinX;
-				int y = MaxY - posinfo.PosY;
-				// 현재 logic 상에 문제는 없지만 그래도 일단 check
-				if (_objects[y, x] == gameObject) _objects[y, x] = null;
+				int x = posInfo.PosX - MinX;
+				int y = MaxY - posInfo.PosY;
+				if (_objects[y, x] == gameObject)
+					_objects[y, x] = null;
 			}
 
 			return true;
 		}
 
 		// C_MoveHandler -> handleMove에서 호출. 이동 여부에 따라 _players 정보 변경
+		// monster에서 이동 
+		// monster 및 player가 enterGame을 할 때도 호출됨
 		public bool ApplyMove(GameObject gameObject, Vector2Int dest)
         {
 			ApplyLeave(gameObject);
 
 			PositionInfo posinfo = gameObject.PosInfo;
-			if (CanGo(dest, true) == false)
-				return false;
+			if (CanGo(dest, true) == false) return false;
 
             {
-				int x = dest.x - MinX; 
+				int x = dest.x - MinX;
 				int y = MaxY - dest.y;
 				_objects[y, x] = gameObject;
 			}
@@ -131,7 +136,7 @@ namespace Server.Game
         }
 
 		// 지금은 만들어놓은 맵이 하나밖에 없으므로 간단하게 mapid가 1이라고 가정하고 진행
-		public void LoadMap(int mapId, string PathPrefix)	
+		public void LoadMap(int mapId, string PathPrefix = "../../../../../Common/Mapdata")
 		{
 			string mapName = "Map_" + mapId.ToString("000"); // formatting, 1일경우에 001이됨
 															 // Collision 관련 파일
@@ -147,7 +152,7 @@ namespace Server.Game
 			int xCount = MaxX - MinX + 1;
 			int yCount = MaxY - MinY + 1;
 			_collision = new bool[yCount, xCount];
-			_objects = new Player[yCount, xCount];
+			_objects = new GameObject[yCount, xCount];
 
 			for (int y = 0; y < yCount; y++)
 			{
@@ -166,7 +171,7 @@ namespace Server.Game
 		int[] _deltaX = new int[] { 0, 0, -1, 1 };
 		int[] _cost = new int[] { 10, 10, 10, 10 };
 
-		public List<Vector2Int> FindPath(Vector2Int startCellPos, Vector2Int destCellPos, bool ignoreDestCollision = false)
+		public List<Vector2Int> FindPath(Vector2Int startCellPos, Vector2Int destCellPos, bool checkObjects = true)
 		{
 			List<Pos> path = new List<Pos>();
 
@@ -185,7 +190,7 @@ namespace Server.Game
 			int[,] open = new int[SizeY, SizeX]; // OpenList
 			for (int y = 0; y < SizeY; y++)
 				for (int x = 0; x < SizeX; x++)
-					open[y, x] = Int32.MaxValue; // 초기화
+					open[y, x] = Int32.MaxValue;
 
 			Pos[,] parent = new Pos[SizeY, SizeX];
 
@@ -199,7 +204,7 @@ namespace Server.Game
 			// 시작점 발견 (예약 진행)
 			open[pos.Y, pos.X] = 10 * (Math.Abs(dest.Y - pos.Y) + Math.Abs(dest.X - pos.X));
 			pq.Push(new PQNode() { F = 10 * (Math.Abs(dest.Y - pos.Y) + Math.Abs(dest.X - pos.X)), G = 0, Y = pos.Y, X = pos.X });
-			parent[pos.Y, pos.X] = new Pos(pos.Y, pos.X); // 시작점은 자기 자신을 부모로 둔다.
+			parent[pos.Y, pos.X] = new Pos(pos.Y, pos.X);
 
 			while (pq.Count > 0)
 			{
@@ -222,9 +227,9 @@ namespace Server.Game
 
 					// 유효 범위를 벗어났으면 스킵
 					// 벽으로 막혀서 갈 수 없으면 스킵
-					if (!ignoreDestCollision || next.Y != dest.Y || next.X != dest.X)
+					if (next.Y != dest.Y || next.X != dest.X)
 					{
-						if (CanGo(Pos2Cell(next)) == false) // CellPos
+						if (CanGo(Pos2Cell(next), checkObjects) == false) // CellPos
 							continue;
 					}
 
@@ -233,15 +238,14 @@ namespace Server.Game
 						continue;
 
 					// 비용 계산
-					int g = 0; // node.G + _cost[i];
+					int g = 0;// node.G + _cost[i];
 					int h = 10 * ((dest.Y - next.Y) * (dest.Y - next.Y) + (dest.X - next.X) * (dest.X - next.X));
-
 					// 다른 경로에서 더 빠른 길 이미 찾았으면 스킵
 					if (open[next.Y, next.X] < g + h)
 						continue;
 
 					// 예약 진행
-					open[next.Y, next.X] = g + h;
+					open[dest.Y, dest.X] = g + h;
 					pq.Push(new PQNode() { F = g + h, G = g, Y = next.Y, X = next.X });
 					parent[next.Y, next.X] = new Pos(node.Y, node.X);
 				}

@@ -26,18 +26,27 @@ namespace Server.Game
         // 내가 소속되어있는 map, 좌표를 기준으로 player가 있는지 없는지 찾고 싶음 -> map 안에서 관리
         public Map Map { get; private set; } = new Map();
 
-        
         public void Init(int mapId)
         {
             // mapId에 따른 경로도 나중에 공식화해서 지정이 될 것
-            Map.LoadMap(mapId, "../../../../../Common/Mapdata");
+            Map.LoadMap(mapId);
+
+            // TEMP Stat값은 Monster 생성자에서 값을 초기화 해주고 있다.
+            Monster monster = ObjectManager.Instance.Add<Monster>();
+            monster.CellPos = new Vector2Int(5, 5);
+            EnterGame(monster);
         }
 
-        // GameRoom을 몇 tick 단위로 업데이트 할 
+        // GameRoom을 몇 tick 단위로 업데이트 
         public void Update()
         {
             lock (_lock)
             {
+                foreach(Monster monster in _monsters.Values)
+                {
+                    monster.Update();
+                }
+
                 foreach (Projectile projectile in _projectiles.Values)
                 {
                     projectile.Update();
@@ -62,6 +71,8 @@ namespace Server.Game
                     _players.Add(gameObject.Id, player);
                     player.Room = this;
 
+                    Map.ApplyMove(player, new Vector2Int(player.CellPos.x, player.CellPos.y));
+
                     // 본인한테 정보 전송
                     {
                         S_EnterGame enterPacket = new S_EnterGame();
@@ -74,6 +85,13 @@ namespace Server.Game
                         {
                             if (player != p) spawnPacket.Objects.Add(p.Info);
                         }
+
+                        foreach (Monster m in _monsters.Values)
+                            spawnPacket.Objects.Add(m.Info);
+
+                        foreach (Projectile p in _projectiles.Values)
+                            spawnPacket.Objects.Add(p.Info);
+
                         player.Session.Send(spawnPacket);
                         // 지금은 contents code와 network로 보내는 코드 같이 묶여있음
                     }
@@ -83,6 +101,8 @@ namespace Server.Game
                     Monster monster = gameObject as Monster;
                     _monsters.Add(gameObject.Id, monster);
                     monster.Room = this;
+
+                    Map.ApplyMove(monster, new Vector2Int(monster.CellPos.x, monster.CellPos.y));
                 }
                 else if(type == GameObjectType.Projectile)
                 {
@@ -130,6 +150,7 @@ namespace Server.Game
                 {
                     Monster monster = null;
                     if (_monsters.Remove(objectId, out monster) == false) return;
+
                     monster.Room = null;
                     Map.ApplyLeave(monster);
                 }
@@ -185,7 +206,7 @@ namespace Server.Game
                 resMovePacket.ObjectId = player.Info.ObjectId;
                 resMovePacket.PosInfo = movePacket.PosInfo;
 
-                BroadCast(resMovePacket);
+                Broadcast(resMovePacket);
             }
         }
 
@@ -211,7 +232,7 @@ namespace Server.Game
                 // skill sheet - json or xml
                 // echo 처럼 다시 돌려줌
                 skill.Info.SkillId = skillPacket.Info.SkillId;  
-                BroadCast(skill);
+                Broadcast(skill);
 
                 Data.Skill skillData = null;
                 if (DataManager.SkillDict.TryGetValue(skillPacket.Info.SkillId, out skillData) == false) return;
@@ -259,8 +280,19 @@ namespace Server.Game
                 }
             }
         }
+
+        public Player FindPlayer(Func<GameObject, bool> condition)
+        {
+
+            foreach (Player player in _players.Values)
+            {
+                if(condition.Invoke(player)) return player;
+            }
+            return null;
+        }
+
          
-        public void BroadCast(IMessage packet)
+        public void Broadcast(IMessage packet)
         {
             // 지금은 간단하게 하기 위해 jobQueue에 넣지 않고 lock만 잡는다.
             lock(_lock)

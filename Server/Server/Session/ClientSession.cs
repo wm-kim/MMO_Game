@@ -9,6 +9,7 @@ using ServerCore;
 using Google.Protobuf.Protocol;
 using Google.Protobuf;
 using Server.Game;
+using Server.Data;
 
 namespace Server
 {
@@ -58,11 +59,25 @@ namespace Server
                 MyPlayer.Info.PosInfo.PosX = 0;
                 MyPlayer.Info.PosInfo.PosY = 0;
 
+                // 이제 player의 정보가 datasheet를 이용하여 설정된다.
+                // 나중에 monster statDict도 따로 파서 monster에 대한 정보도 이런식으로 받는다
+                // SkillData의 1번 stat 정보를 읽어들여서 초기값 설정을한다.
+                StatInfo stat = null;
+                DataManager.StatDict.TryGetValue(1, out stat);
+                MyPlayer.Stat.MergeFrom(stat);
+
                 MyPlayer.Session = this;
             }
 
             // Room의 player목록에 추가, S_EnterGame, S_Spawn 보냄
             RoomManager.Instance.Find(1).EnterGame(MyPlayer);
+        }
+        public override void OnRecvPacket(ArraySegment<byte> buffer)
+        {
+            // singleton이 아니라 handler 방식으로 등록해서 호출하는 방식으로해도 상관없다.
+            // PacketManager에서 packet을 deserialize하고 handler를 호출한다.
+            // 인자로 handler callback함수를 받는다. 명시하지 않으면 처음 register한 것이 들어감
+            PacketManager.Instance.OnRecvPacket(this, buffer);
         }
 
         public override void OnDisconnected(EndPoint endPoint)
@@ -73,14 +88,6 @@ namespace Server
             SessionManager.Instance.Remove(this);
 
             Console.WriteLine($"OnDisconnected : {endPoint}");
-        }
-
-        public override void OnRecvPacket(ArraySegment<byte> buffer)
-        {
-            // singleton이 아니라 handler 방식으로 등록해서 호출하는 방식으로해도 상관없다.
-            // PacketManager에서 packet을 deserialize하고 handler를 호출한다.
-            // 인자로 handler callback함수를 받는다. 명시하지 않으면 처음 register한 것이 들어감
-            PacketManager.Instance.OnRecvPacket(this, buffer);
         }
 
         public override void OnSend(int numofBytes)

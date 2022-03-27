@@ -14,6 +14,8 @@ enum MsgId {
   S_MOVE = 5;
   C_SKILL = 6;
   S_SKILL = 7;
+  S_CHANGE_HP = 8;
+  S_DIE = 9;
 }
 
 enum CreatureState {
@@ -31,16 +33,16 @@ enum MoveDir {
 }
 
 enum GameObjectType {
-	NONE = 0;
-	PLAYER = 1;
-	MONSTER = 2;
-	PROJECTILE = 3;
+  NONE = 0;
+  PLAYER = 1;
+  MONSTER = 2;
+  PROJECTILE = 3;
 }
 
 enum SkillType {
-	SKILL_NONE = 0;
-	SKILL_AUTO = 1;
-	SKILL_PROJECTILE = 2;
+  SKILL_NONE = 0;
+  SKILL_AUTO = 1;
+  SKILL_PROJECTILE = 2;
 }
 
 message S_EnterGame {
@@ -72,12 +74,25 @@ message S_Move {
 }
 
 message C_Skill {
-	SkillInfo info = 1;
+  SkillInfo info = 1;
 }
 
 message S_Skill {
-	int32 objectId = 1;
-	SkillInfo info = 2;
+  int32 objectId = 1;
+  SkillInfo info = 2;
+}
+
+// StatInfo에 넣어주자니 maxHp나 speed는 거의 변할 일이 없어서 낭비가 심함
+message S_ChangeHp {
+  int32 objectId = 1;
+  int32 hp = 2;
+  // 입힌 데미지 int32 hpDiff
+  // 사유도 포함하는 경우가 많음
+}
+
+message S_Die {
+  int32 objectId = 1;
+  int32 attackerId = 2;
 }
 
 message ObjectInfo {
@@ -100,11 +115,14 @@ message PositionInfo {
 }
 
 message StatInfo {
-	int32 hp = 1;
-	int32 maxHp = 2;
-	float speed = 3;
+  int32 level = 1;
+  int32 hp = 2;
+  int32 maxHp = 3;
+  int32 attack = 4;
+  float speed = 5;
+  int32 totalExp = 6;
 }
 
 message SkillInfo {
-	int32 skillId = 1;
+  int32 skillId = 1;
 }

@@ -6,31 +6,34 @@ using UnityEngine;
 
 namespace Data
 {
-    #region Stat
-    [Serializable]
-    public class Stat
-    {
-        public int level;
-        public int maxHp;
-        public int attack;
-        public int totalExp;
-    }
+    // Stat정보를 굳이 clinet에서 들고 있어야할 필요없다.
+    // 모든 정보들은 server쪽에서 보내주고 있다.
+    //#region Stat
+    //[Serializable]
+    //public class Stat
+    //{
+    //    public int level;
+    //    public int maxHp;
+    //    public int attack;
+    //    public int totalExp;
+    //}
 
-    [Serializable]
-    public class StatData : ILoader<int, Stat>
-    {
-        public List<Stat> stats = new List<Stat>();
+    //[Serializable]
+    //public class StatData : ILoader<int, Stat>
+    //{
+    //    public List<Stat> stats = new List<Stat>();
 
-        public Dictionary<int, Stat> MakeDict()
-        {
-            Dictionary<int, Stat> dict = new Dictionary<int, Stat>();
-            foreach (Stat stat in stats)
-                dict.Add(stat.level, stat);
-            return dict;
-        }
-    }
-    #endregion
+    //    public Dictionary<int, Stat> MakeDict()
+    //    {
+    //        Dictionary<int, Stat> dict = new Dictionary<int, Stat>();
+    //        foreach (Stat stat in stats)
+    //            dict.Add(stat.level, stat);
+    //        return dict;
+    //    }
+    //}
+    //#endregion
 
+    // SKill도 딱히 여기서 들고 있지 않고
     #region Skill
     [Serializable]
     public class Skill

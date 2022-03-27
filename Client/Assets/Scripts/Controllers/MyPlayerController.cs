@@ -108,8 +108,8 @@ public class MyPlayerController : PlayerController
     protected override void MoveToNextPos()
     {
         // 이제 updateflag로 변했는지 확인할 것이므로 필요없다.
-        CreatureState prevState = State;
-        Vector3Int prevCellPos = CellPos;
+        // CreatureState prevState = State;
+        // Vector3Int prevCellPos = CellPos;
 
         // 버그 자동으로 해결, 계속 누르고 있으면 
         // 중간에 idle animation이 나오지 않는다.
@@ -146,7 +146,7 @@ public class MyPlayerController : PlayerController
         // 이부분 공용으로 사용하기 어려운게 화살인지 player인지에 따라 나뉘었음
         if (Managers.Map.CanGo(destPos))
         {
-            if (Managers.Object.Find(destPos) == null)
+            if (Managers.Object.FindCreature(destPos) == null)
             {
                 CellPos = destPos;
                 // 버그 수정, 이동할 수 없어도 계속 움직이는 animation을 틀어주도록

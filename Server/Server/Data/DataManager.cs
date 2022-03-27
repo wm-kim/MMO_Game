@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Protobuf.Protocol;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,12 +16,12 @@ namespace Server.Data
     // static으로 만들어서 singleton으로 사용해도 되지만 method를 static으로 바꾼다.
     public class DataManager
     {
-        static public Dictionary<int, Data.Stat> StatDict { get; private set; } = new Dictionary<int, Data.Stat>();
+        static public Dictionary<int, StatInfo> StatDict { get; private set; } = new Dictionary<int, StatInfo>();
         static public Dictionary<int, Data.Skill> SkillDict { get; private set; } = new Dictionary<int, Data.Skill>();
 
         public static void LoadData()
         {
-            StatDict = LoadJson<Data.StatData, int, Data.Stat>("StatData").MakeDict();
+            StatDict = LoadJson<Data.StatData, int, StatInfo>("StatData").MakeDict();
             SkillDict = LoadJson<Data.SkillData, int, Data.Skill>("SkillData").MakeDict();
         }
 

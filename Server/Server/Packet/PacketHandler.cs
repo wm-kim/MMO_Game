@@ -16,6 +16,8 @@ class PacketHandler
 		C_Move movePacket = packet as C_Move;
 		ClientSession clientSession = session as ClientSession;
 
+		Console.WriteLine($"C_Move ({movePacket.PosInfo.PosX}, {movePacket.PosInfo.PosY})");
+
 		// Player가 입장해 있는 방을 찾아서 방에 있는 모든 player들에게 broadcasting
 		// if (clientSession.MyPlayer == null) return;
 		// 누군가 다른 Thread에서 MyPlayer를 null로 바꿀 수 있음

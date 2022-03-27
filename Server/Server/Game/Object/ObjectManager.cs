@@ -10,7 +10,6 @@ namespace Server.Game
     //monster나 gameobject도 구별할 수있는 식별자가 필요하니까 공용매니저가 필요할수도
     public class ObjectManager
     {
-
         public static ObjectManager Instance { get; } = new ObjectManager();
 
         object _lock = new object();
@@ -77,7 +76,6 @@ namespace Server.Game
                 {
                     Player player = null;
                     if (_players.TryGetValue(objectId, out player)) return player;
-                    return null;
                 }
 
                 // return은 lock 안에서 하던 밖에서 하던 상관 없다.

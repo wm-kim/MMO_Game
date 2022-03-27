@@ -109,7 +109,9 @@ public class PlayerController : CreatureController
         base.UpdateController();
     }
 
-    public void UseSkill(int skillId)
+    // Player도 client에서 멋대로 state를 왔다갔다 할 것이 아니라 Monster처럼
+    // 어느정도 Server에서 계산을 해야지 어느정도 hacking 방지가 되겠다.
+    public override void UseSkill(int skillId)
     {
         if (skillId == 1)
         {

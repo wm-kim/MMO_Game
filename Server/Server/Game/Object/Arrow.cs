@@ -39,7 +39,7 @@ namespace Server.Game
                 S_Move movePacket = new S_Move();
                 movePacket.ObjectId = Id;
                 movePacket.PosInfo = PosInfo;
-                Room.BroadCast(movePacket);
+                Room.Broadcast(movePacket);
 
                 Console.WriteLine("move arrow");
             }
@@ -50,8 +50,8 @@ namespace Server.Game
                 {
                     // TODO 피격 판정
                     // OnDamaged에서 Owner를 찾아도 되고, 아니면 owner를 직접넘겨줘도 됨
-                    target.OnDamaged(this, Data.damage);
-                    Console.WriteLine($"damage : {Data.damage}");
+                    // 최종 데미지 : 화살의 damage + player의 attack
+                    target.OnDamaged(this, Data.damage + Owner.Stat.Attack);
                 }
 
                 // 소멸, type 추출후, 기억에서 삭제 한다음, despawn packet 보냄
