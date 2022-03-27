@@ -64,7 +64,6 @@ namespace Server.Game
             _action.Invoke(_t1, _t2);
         }
     }
-
     
     public class Job<T1, T2, T3> : IJob
     {

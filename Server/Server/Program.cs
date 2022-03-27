@@ -19,9 +19,18 @@ namespace Server
         // GameRoom도 나중에는 하나가 아니라 RoomManger가 있어야한다.
         // public static GameRoom Room = new GameRoom();
 
-        static void FlushRoom()
+        static List<System.Timers.Timer> _timers = new List<System.Timers.Timer>();
+
+        static void TickRoom(GameRoom room, int tick = 100)
         {
-            JobTimer.Instance.Push(FlushRoom, 250); //  다시 예약
+            var timer = new System.Timers.Timer();
+            timer.Interval = tick;
+            timer.Elapsed += ((s, e) => { room.Update(); });
+            timer.AutoReset = true;
+            timer.Enabled = true;
+
+            _timers.Add(timer);
+            // 몀추고 싶다면 timer.Stop();
         }
 
         static void Main(string[] args)
@@ -33,7 +42,9 @@ namespace Server
 
             // 1번방 생성, 나중에는 데이터로 빼서 시작지역을 정해줌.
             // 지금은 1번방만 사용할 것이다.
-            RoomManager.Instance.Add(1);
+            GameRoom room = RoomManager.Instance.Add(1);
+            // 50ms마다 한번씩 실행
+            TickRoom(room, 50); 
 
             string host = Dns.GetHostName(); // local 컴퓨터의 host이름
             IPHostEntry ipHost = Dns.GetHostEntry(host); // 네트워크망 안에 있는 DNS 서버가 해줌
@@ -56,9 +67,10 @@ namespace Server
             {
                 // 예약된거 처리
                 // JobTimer.Instance.Flush();
+                //GameRoom room = RoomManager.Instance.Find(1);
+                //room.Push(room.Update);
 
-                GameRoom room = RoomManager.Instance.Find(1);
-                room.Push(room.Update);
+                // 프로그램이 꺼지지 않게끔만 유지
                 Thread.Sleep(100);
             }
         }

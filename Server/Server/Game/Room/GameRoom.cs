@@ -35,9 +35,17 @@ namespace Server.Game
             monster.CellPos = new Vector2Int(5, 5);
             // JobSerialize에 의해서 호출됨 그래도 push를 해주는게 좋다.
             Push(EnterGame, monster);
+
+            TestTimer();
         }
 
-        // GameRoom을 몇 tick 단위로 업데이트 
+        void TestTimer()
+        {
+            Console.WriteLine("Test Timer");
+            PushAfter(100, TestTimer);
+        }
+
+        // 누군가 주기적으로 호출해줘야한다. TickRoom함수로 50ms 마다 실행
         public void Update()
         {
             foreach(Monster monster in _monsters.Values)
@@ -49,6 +57,8 @@ namespace Server.Game
             {
                 projectile.Update();
             }
+
+            Flush();
         }
 
         // 인자로 접속한 player의 정보 전달
@@ -130,8 +140,8 @@ namespace Server.Game
                 if (_players.Remove(objectId, out player) == false)
                     return;
 
+                Map.ApplyLeave(player); 
                 player.Room = null;
-                Map.ApplyLeave(player);
 
                 // 본인한테 정보 전송
                 {

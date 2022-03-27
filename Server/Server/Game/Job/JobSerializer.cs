@@ -33,24 +33,14 @@ namespace Server.Game
         // Push는 여러명이서 할 수 있음
         public void Push(IJob job)
         {
-            // 실행하는 동안에는 lock에 접근할 수 없으므로 단계적으로 접근
-            // flush : queue에 쌓인것을 실행할것인가?
-            bool flush = false; 
             lock (_lock)
             {
                 _jobQueue.Enqueue(job);
-                // 아무도 실행하고 있지않다면 직접실행
-                if (_flush == false)
-                {
-                    flush = _flush = true;
-                }
             }
-
-            if (flush)
-                Flush();
         }
 
-        void Flush()
+        // GameRoom update에서 flush해준다.
+        public void Flush()
         {
             // 실행할 수 있는 일감을 모두 실행한다.
             _timer.Flush();
