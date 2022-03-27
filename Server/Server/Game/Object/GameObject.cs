@@ -120,6 +120,8 @@ namespace Server.Game
         // 변한 체력을 S_ChangeHp를 통해서 보낸다
         public virtual void OnDamaged(GameObject attacker, int damage)
         {
+            if (Room == null) return;
+
             Stat.Hp = Math.Max(Stat.Hp - damage, 0);
 
             // TOOD : broadcasting packet 
@@ -134,15 +136,19 @@ namespace Server.Game
             }
         }
 
+        // 어짜피 OnDead가 호출되는건 GameRoom에 Serializer에 의해서 들어간다음에 뽑혀서 실행됨
         public virtual void OnDead(GameObject attacker)
         {
+            if (Room == null) return;
+
             S_Die diePacket = new S_Die();
             diePacket.ObjectId = Id;
             diePacket.AttackerId = attacker.Id;
             Room.Broadcast(diePacket);
 
             GameRoom room = Room;
-            room.LeaveGame(Id); // Room을 null로 밀어줌
+            // room.Push(room.LeaveGame, Id); // Room을 null로 밀어줌
+            room.LeaveGame(Id);
 
             // 다시 같은 방에 풀피로 스폰
             Stat.Hp = Stat.MaxHp;
@@ -151,6 +157,9 @@ namespace Server.Game
             PosInfo.PosX = 0;
             PosInfo.PosY = 0;
 
+            // Room은 null로 밀어놓았기때문에 Room를 사용하면 crash
+            // 이런 비슷한 문제들이 lambda capture에서 일어날 수 있다.
+            // room.Push(room.EnterGame, this);
             room.EnterGame(this);
         }
     }

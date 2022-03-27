@@ -51,14 +51,15 @@ namespace Server
             // JobTimer.Instance.Push(FlushRoom);
             // 다른 thread에서 JobTimer라는 중앙관리 시스템에 일감을 던져서 예약하게될것
 
-            // TODO
+            // TODO. Timer 이용
             while(true)
             {
                 // 예약된거 처리
                 // JobTimer.Instance.Flush();
 
-                RoomManager.Instance.Find(1).Update();
-                // Thread.Sleep(100);
+                GameRoom room = RoomManager.Instance.Find(1);
+                room.Push(room.Update);
+                Thread.Sleep(100);
             }
         }
     }

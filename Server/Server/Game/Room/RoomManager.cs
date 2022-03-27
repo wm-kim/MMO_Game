@@ -18,7 +18,8 @@ namespace Server.Game
         public GameRoom Add(int mapId)
         {
             GameRoom gameRoom = new GameRoom();
-            gameRoom.Init(mapId);
+            // Init을 static으로 만들어서 객체를 넘겨주는 방식도 좋다.
+            gameRoom.Push(gameRoom.Init, mapId);
 
             lock(_lock)
             {

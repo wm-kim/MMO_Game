@@ -55,7 +55,7 @@ namespace Server.Game
                 }
 
                 // 소멸, type 추출후, 기억에서 삭제 한다음, despawn packet 보냄
-                Room.LeaveGame(Id);
+                Room.Push(Room.LeaveGame, Id);
             }
         }
     }

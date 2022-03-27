@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Server.Game
 {
     struct JobTimerElem : IComparable<JobTimerElem>
     {
         public int execTick; // 실행시간
-        public Action action;
+        public IJob job;
 
         public int CompareTo(JobTimerElem other)
         {
@@ -22,23 +22,22 @@ namespace Server
 
     // 경우에 따라서 여기서 더 최적하는 경우도 있다. 2개로 분리
     // 시간이 임박하면 리스트로 관리
-    class JobTimer
+    public class JobTimer
     {
         // multithread에서 공용으로 쓰므로 lock 필요
         PriorityQueue<JobTimerElem> _pq = new PriorityQueue<JobTimerElem>();
         object _lock = new object();
-        public static JobTimer Instance { get; } = new JobTimer();
         
         // 당장에 실행하기 원하면 tickafter 인지를 받지 않음
-        public void Push(Action action, int tickAfter = 0)
+        public void Push(IJob job, int tickAfter = 0)
         {
-            JobTimerElem job;
-            job.execTick = System.Environment.TickCount + tickAfter;
-            job.action = action;   
+            JobTimerElem jobElemnt;
+            jobElemnt.execTick = System.Environment.TickCount + tickAfter;
+            jobElemnt.job = job;   
 
             lock(_lock)
             {
-                _pq.Push(job);
+                _pq.Push(jobElemnt);
             }
         }
 
@@ -49,7 +48,7 @@ namespace Server
             {
                 int now = System.Environment.TickCount;
 
-                JobTimerElem job;
+                JobTimerElem jobElement;
 
                 lock(_lock)
                 {
@@ -57,13 +56,13 @@ namespace Server
                         break;
 
                     // 다음으로 실행할 것이 현재 시간보다 나중이라면 바로 종료시켜버린다.
-                    job = _pq.Peek();
-                    if (job.execTick > now) break;
+                    jobElement = _pq.Peek();
+                    if (jobElement.execTick > now) break;
 
                     _pq.Pop();
                 }
 
-                job.action.Invoke();
+                jobElement.job.Execute();
             }
         }
     }

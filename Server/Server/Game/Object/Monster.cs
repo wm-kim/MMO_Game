@@ -43,6 +43,9 @@ namespace Server.Game
             }
         }
 
+        // target을 참조값으로 들고 있다.
+        // Player가 나갔다고 한다면 _target을 더이상 이용하면 안되지만
+        // 시점이 오묘하게 겹치면 _target이 나갔음에도 접근을 해서 공격을 하거나 할 수 있다.
         Player _target;
         int _searchCellDist = 10;
         int _chaseCellDist = 20;

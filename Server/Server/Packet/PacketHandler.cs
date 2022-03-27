@@ -31,7 +31,7 @@ class PacketHandler
 		if(room == null) return;
 
 		// 경합조건 발생. 한쪽에 몰아서 lock으로 처리
-		room.HandleMove(player, movePacket);
+		room.Push(room.HandleMove, player, movePacket);
 	}
 
 	// 
@@ -47,6 +47,6 @@ class PacketHandler
 		if (room == null) return;
 
 		// skill id에 따라 처리
-		room.HandleSkill(player, skillPacket);
+		room.Push(room.HandleSkill, player, skillPacket);
 	}
 }

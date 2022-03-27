@@ -70,7 +70,8 @@ namespace Server
             }
 
             // Room의 player목록에 추가, S_EnterGame, S_Spawn 보냄
-            RoomManager.Instance.Find(1).EnterGame(MyPlayer);
+            GameRoom room = RoomManager.Instance.Find(1);
+            room.Push(room.EnterGame, MyPlayer);
         }
         public override void OnRecvPacket(ArraySegment<byte> buffer)
         {
@@ -83,7 +84,8 @@ namespace Server
         public override void OnDisconnected(EndPoint endPoint)
         {
             // 방에서 자신을 제외시키고 S_LeaveGame S_Despawn 보냄
-            RoomManager.Instance.Find(1).LeaveGame(MyPlayer.Info.ObjectId);
+            GameRoom room = RoomManager.Instance.Find(1);
+            room.Push(room.LeaveGame, MyPlayer.Info.ObjectId);
 
             SessionManager.Instance.Remove(this);
 
